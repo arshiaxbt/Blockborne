@@ -90,7 +90,7 @@ const chainTheme: Record<
 };
 
 function clampPercent(value: number) {
-  return `${Math.min(100, Math.max(3, (value / 24) * 100))}%`;
+  return `${Math.min(100, Math.max(3, (value / 150) * 100))}%`;
 }
 
 function createBattleSeed() {
