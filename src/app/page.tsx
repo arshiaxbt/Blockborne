@@ -1,12 +1,13 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
   Cpu,
   Gauge,
   RadioTower,
+  RotateCcw,
   ShieldCheck,
   Sparkles,
   Swords,
@@ -19,18 +20,105 @@ import {
   monadCards,
   type Card,
   type Chain,
+  type Stats,
 } from "@/lib/game-data";
-import { simulateBattle, type BattleResult } from "@/lib/battle-engine";
+import {
+  applyCardsToFighter,
+  calculateArenaScore,
+  simulateBattle,
+  type BattleFighter,
+  type BattleResult,
+} from "@/lib/battle-engine";
+
+const maxCardsPerSide = 4;
+
+const statKeys: (keyof Stats)[] = [
+  "speed",
+  "throughput",
+  "security",
+  "decentralization",
+  "composability",
+  "ux",
+  "reliability",
+];
+
+const statLabels: Record<keyof Stats, string> = {
+  speed: "Speed",
+  throughput: "Throughput",
+  security: "Security",
+  decentralization: "Decentralization",
+  composability: "Composability",
+  ux: "UX",
+  reliability: "Reliability",
+};
+
+const chainTheme: Record<
+  Chain,
+  {
+    accent: string;
+    border: string;
+    glow: string;
+    soft: string;
+    text: string;
+    bar: string;
+    panel: string;
+  }
+> = {
+  MegaETH: {
+    accent: "from-orange-300 via-cyan-200 to-white",
+    border: "border-orange-300/40",
+    glow: "shadow-[0_0_34px_rgba(251,146,60,0.18)]",
+    soft: "bg-orange-300/10",
+    text: "text-orange-100",
+    bar: "from-orange-400 via-cyan-300 to-white",
+    panel:
+      "border-orange-300/25 bg-[linear-gradient(135deg,rgba(251,146,60,0.14),rgba(34,211,238,0.08),rgba(255,255,255,0.04))]",
+  },
+  Monad: {
+    accent: "from-fuchsia-300 via-violet-300 to-purple-950",
+    border: "border-fuchsia-300/40",
+    glow: "shadow-[0_0_34px_rgba(217,70,239,0.18)]",
+    soft: "bg-fuchsia-300/10",
+    text: "text-fuchsia-100",
+    bar: "from-fuchsia-400 via-violet-400 to-purple-950",
+    panel:
+      "border-fuchsia-300/25 bg-[linear-gradient(135deg,rgba(88,28,135,0.42),rgba(0,0,0,0.36),rgba(217,70,239,0.1))]",
+  },
+};
+
+function clampPercent(value: number) {
+  return `${Math.min(100, Math.max(3, (value / 24) * 100))}%`;
+}
+
+function createBattleSeed() {
+  if (typeof crypto !== "undefined" && "randomUUID" in crypto) {
+    return crypto.randomUUID();
+  }
+
+  return `battle-${Date.now()}-${performance.now()}`;
+}
+
+function buildPreview(chain: Chain, cards: Card[], arenaId: string) {
+  const arena = arenas.find((item) => item.id === arenaId) ?? arenas[0];
+  const fighter = applyCardsToFighter(baseFighters[chain], cards);
+  return {
+    ...fighter,
+    arenaScore: calculateArenaScore(fighter, arena),
+  };
+}
 
 function CardButton({
   card,
   selected,
+  disabled,
   onToggle,
 }: {
   card: Card;
   selected: boolean;
+  disabled: boolean;
   onToggle: (card: Card) => void;
 }) {
+  const theme = chainTheme[card.chain];
   const downsideCount = Object.values(card.downsides).filter(
     (value) => (value ?? 0) < 0,
   ).length;
@@ -38,20 +126,25 @@ function CardButton({
   return (
     <button
       type="button"
+      disabled={disabled}
       onClick={() => onToggle(card)}
       className={`group rounded-lg border p-4 text-left transition duration-200 ${
         selected
-          ? "border-cyan-300 bg-cyan-300/10 shadow-[0_0_28px_rgba(34,211,238,0.18)]"
-          : "border-white/10 bg-white/[0.04] hover:border-fuchsia-300/70 hover:bg-white/[0.07]"
+          ? `${theme.border} ${theme.soft} ${theme.glow}`
+          : "border-white/10 bg-white/[0.04] hover:border-white/30 hover:bg-white/[0.07]"
+      } ${
+        disabled
+          ? "cursor-not-allowed opacity-40 hover:border-white/10 hover:bg-white/[0.04]"
+          : ""
       }`}
     >
       <div className="flex items-center justify-between gap-3">
-        <span className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-200">
+        <span className={`text-xs font-bold uppercase tracking-[0.22em] ${theme.text}`}>
           {card.subtitle}
         </span>
         <span
           className={`h-2.5 w-2.5 rounded-full ${
-            selected ? "bg-cyan-300" : "bg-white/25 group-hover:bg-fuchsia-300"
+            selected ? "bg-white" : "bg-white/25 group-hover:bg-white/70"
           }`}
         />
       </div>
@@ -66,11 +159,88 @@ function CardButton({
         <span className="rounded bg-white/10 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
           Max {card.maxCopies}
         </span>
-        <span className="rounded bg-fuchsia-300/10 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-fuchsia-100">
+        <span className="rounded bg-black/30 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
           {downsideCount ? `${downsideCount} tradeoff` : "clean boost"}
         </span>
       </div>
     </button>
+  );
+}
+
+function StatBar({
+  label,
+  value,
+  chain,
+}: {
+  label: string;
+  value: number;
+  chain: Chain;
+}) {
+  const theme = chainTheme[chain];
+
+  return (
+    <div>
+      <div className="flex items-center justify-between gap-3 text-xs">
+        <span className="font-bold uppercase tracking-[0.16em] text-slate-400">
+          {label}
+        </span>
+        <span className="font-mono font-bold text-slate-100">{value}</span>
+      </div>
+      <div className="mt-2 h-2.5 overflow-hidden rounded bg-white/10">
+        <motion.div
+          initial={false}
+          animate={{ width: clampPercent(value) }}
+          transition={{ duration: 0.35 }}
+          className={`h-full rounded bg-gradient-to-r ${theme.bar}`}
+        />
+      </div>
+    </div>
+  );
+}
+
+function FighterPreview({
+  fighter,
+  chain,
+}: {
+  fighter: BattleFighter;
+  chain: Chain;
+}) {
+  const theme = chainTheme[chain];
+
+  return (
+    <div className={`rounded-lg border p-5 ${theme.panel}`}>
+      <div className="flex flex-col justify-between gap-3 sm:flex-row sm:items-start">
+        <div>
+          <p className={`text-xs font-bold uppercase tracking-[0.24em] ${theme.text}`}>
+            {chain} live stat preview
+          </p>
+          <h3 className="mt-2 text-2xl font-black text-white">
+            {fighter.tagline}
+          </h3>
+          <p className="mt-2 text-sm leading-6 text-slate-300">
+            {fighter.layer} / {fighter.gasToken} gas
+          </p>
+        </div>
+        <div className="rounded-md border border-white/10 bg-black/35 px-3 py-2 text-right">
+          <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-500">
+            Arena score
+          </p>
+          <p className="mt-1 font-mono text-2xl font-black text-white">
+            {fighter.arenaScore}
+          </p>
+        </div>
+      </div>
+      <div className="mt-5 grid gap-3">
+        {statKeys.map((key) => (
+          <StatBar
+            key={`${chain}-${key}`}
+            label={statLabels[key]}
+            value={fighter.finalStats[key]}
+            chain={chain}
+          />
+        ))}
+      </div>
+    </div>
   );
 }
 
@@ -96,6 +266,8 @@ export default function Home() {
     monadCards[0].id,
   ]);
   const [result, setResult] = useState<BattleResult | null>(null);
+  const [visibleLogCount, setVisibleLogCount] = useState(0);
+  const [battleSeed, setBattleSeed] = useState<string | null>(null);
   const selectedArena =
     arenas.find((arena) => arena.id === selectedArenaId) ?? arenas[0];
   const selectedMegaCards = useMemo(
@@ -106,30 +278,75 @@ export default function Home() {
     () => monadCards.filter((card) => selectedMonadIds.includes(card.id)),
     [selectedMonadIds],
   );
+  const megaPreview = useMemo(
+    () => buildPreview("MegaETH", selectedMegaCards, selectedArenaId),
+    [selectedMegaCards, selectedArenaId],
+  );
+  const monadPreview = useMemo(
+    () => buildPreview("Monad", selectedMonadCards, selectedArenaId),
+    [selectedMonadCards, selectedArenaId],
+  );
+
+  useEffect(() => {
+    if (!result) {
+      setVisibleLogCount(0);
+      return;
+    }
+
+    setVisibleLogCount(0);
+    const timers = result.log.map((_, index) =>
+      window.setTimeout(() => {
+        setVisibleLogCount(index + 1);
+      }, 260 * (index + 1)),
+    );
+
+    return () => {
+      timers.forEach(window.clearTimeout);
+    };
+  }, [result]);
 
   const toggleCard = (
     card: Card,
     selectedIds: string[],
     setSelectedIds: (ids: string[]) => void,
   ) => {
+    setResult(null);
+    setBattleSeed(null);
+
     if (selectedIds.includes(card.id)) {
       setSelectedIds(selectedIds.filter((id) => id !== card.id));
       return;
     }
-    setSelectedIds([...selectedIds, card.id].slice(-2));
+
+    if (selectedIds.length >= maxCardsPerSide) {
+      return;
+    }
+
+    setSelectedIds([...selectedIds, card.id]);
   };
 
-  const startBattle = () => {
+  const runBattle = () => {
+    const seed = createBattleSeed();
+    setBattleSeed(seed);
     setResult(
-      simulateBattle(selectedArena, selectedMegaCards, selectedMonadCards),
+      simulateBattle(selectedArena, selectedMegaCards, selectedMonadCards, seed),
     );
   };
 
+  const resetLoadout = () => {
+    setSelectedMegaIds([]);
+    setSelectedMonadIds([]);
+    setResult(null);
+    setBattleSeed(null);
+  };
+
+  const visibleLog = result?.log.slice(0, visibleLogCount);
+
   return (
     <main className="min-h-screen overflow-hidden bg-[#080812] text-white">
-      <div className="absolute inset-0 -z-0 bg-[linear-gradient(rgba(34,211,238,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(236,72,153,0.08)_1px,transparent_1px)] bg-[size:42px_42px]" />
+      <div className="absolute inset-0 -z-0 bg-[linear-gradient(rgba(34,211,238,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(168,85,247,0.08)_1px,transparent_1px)] bg-[size:42px_42px]" />
       <div className="relative z-10">
-        <section className="mx-auto flex min-h-[92vh] w-full max-w-7xl flex-col justify-center px-5 py-16 sm:px-8 lg:px-10">
+        <section className="mx-auto flex min-h-[88vh] w-full max-w-7xl flex-col justify-center px-5 py-16 sm:px-8 lg:px-10">
           <div className="grid items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             <motion.div
               initial={{ opacity: 0, y: 18 }}
@@ -144,18 +361,17 @@ export default function Home() {
                 FastEVM Fighters
               </h1>
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
-                Pick an arena, load feature cards for MegaETH and Monad, then
-                watch a contextual matchup explain which design choices mattered
-                in that scenario. This is an educational game, not financial
-                advice.
+                Build two temporary EVM loadouts, preview the stat impact, then
+                run an eight-round seeded battle. Outcomes are contextual
+                teaching aids, not financial advice or universal rankings.
               </p>
               <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
-                <StatPill label="Mode" value={1} />
                 <StatPill label="Arenas" value={arenas.length} />
                 <StatPill
                   label="Cards"
                   value={megaethCards.length + monadCards.length}
                 />
+                <StatPill label="Rounds" value={8} />
                 <StatPill label="Wallets" value={0} />
               </div>
             </motion.div>
@@ -164,27 +380,25 @@ export default function Home() {
               initial={{ opacity: 0, scale: 0.96 }}
               animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.55, delay: 0.1 }}
-              className="rounded-lg border border-white/10 bg-white/[0.045] p-5 shadow-[0_0_70px_rgba(236,72,153,0.12)] backdrop-blur"
+              className="rounded-lg border border-white/10 bg-white/[0.045] p-5 shadow-[0_0_70px_rgba(168,85,247,0.14)] backdrop-blur"
             >
               <div className="flex items-center justify-between border-b border-white/10 pb-4">
                 <div>
                   <p className="text-xs font-bold uppercase tracking-[0.24em] text-fuchsia-200">
                     Match preview
                   </p>
-                  <h2 className="mt-1 text-2xl font-black">EVM Duel Deck</h2>
+                  <h2 className="mt-1 text-2xl font-black">Realtime vs parallel</h2>
                 </div>
                 <Swords className="text-cyan-200" size={30} />
               </div>
-              <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-stretch gap-3">
-                {(["MegaETH", "Monad"] as Chain[]).map((chain, index) => (
+              <div className="mt-5 grid gap-3 sm:grid-cols-[1fr_auto_1fr]">
+                {(["MegaETH", "Monad"] as Chain[]).map((chain) => (
                   <div
                     key={chain}
-                    className="rounded-lg border border-white/10 bg-black/40 p-4"
+                    className={`rounded-lg border p-4 ${chainTheme[chain].panel}`}
                   >
                     <p
-                      className={`text-xs font-bold uppercase tracking-[0.2em] ${
-                        index === 0 ? "text-cyan-200" : "text-fuchsia-200"
-                      }`}
+                      className={`text-xs font-bold uppercase tracking-[0.2em] ${chainTheme[chain].text}`}
                     >
                       {chain}
                     </p>
@@ -201,8 +415,8 @@ export default function Home() {
                 </div>
               </div>
               <p className="mt-5 rounded-md border border-lime-300/20 bg-lime-300/10 p-4 text-sm leading-6 text-lime-50">
-                Outcomes are weighted by the selected arena and card tradeoffs.
-                The result is a teaching aid, not a global chain ranking.
+                Select one arena and up to four cards per side. Extra cards are
+                disabled until a slot opens.
               </p>
             </motion.div>
           </div>
@@ -216,15 +430,14 @@ export default function Home() {
                   Arena selection
                 </p>
                 <h2 className="mt-2 text-3xl font-black">
-                  Choose the pressure test
+                  Choose exactly one pressure test
                 </h2>
               </div>
               <p className="max-w-xl text-sm leading-6 text-slate-400">
-                Each arena changes the stat weights, so the same cards can
-                produce different lessons.
+                Arena weights decide which stats matter most during the battle.
               </p>
             </div>
-            <div className="mt-6 grid gap-4 lg:grid-cols-3">
+            <div className="mt-6 grid gap-4 md:grid-cols-2 xl:grid-cols-4">
               {arenas.map((arena) => (
                 <button
                   key={arena.id}
@@ -232,6 +445,7 @@ export default function Home() {
                   onClick={() => {
                     setSelectedArenaId(arena.id);
                     setResult(null);
+                    setBattleSeed(null);
                   }}
                   className={`rounded-lg border p-5 text-left transition ${
                     selectedArena.id === arena.id
@@ -241,7 +455,7 @@ export default function Home() {
                 >
                   <div className="flex items-center justify-between gap-4">
                     <span className="rounded bg-white/10 px-2 py-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-200">
-                      Arena
+                      {selectedArena.id === arena.id ? "Selected" : "Arena"}
                     </span>
                     <RadioTower className="text-lime-200" size={20} />
                   </div>
@@ -256,16 +470,23 @@ export default function Home() {
         </section>
 
         <section className="mx-auto grid max-w-7xl gap-8 px-5 py-12 sm:px-8 lg:grid-cols-2 lg:px-10">
+          <FighterPreview fighter={megaPreview} chain="MegaETH" />
+          <FighterPreview fighter={monadPreview} chain="Monad" />
+        </section>
+
+        <section className="mx-auto grid max-w-7xl gap-8 px-5 pb-12 sm:px-8 lg:grid-cols-2 lg:px-10">
           <div>
-            <div className="mb-5 flex items-center gap-3">
-              <Zap className="text-cyan-200" />
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-200">
-                  MegaETH card selection
-                </p>
-                <h2 className="mt-1 text-3xl font-black">
-                  Load up to two cards
-                </h2>
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Zap className="text-orange-200" />
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.24em] text-orange-200">
+                    MegaETH card selection
+                  </p>
+                  <h2 className="mt-1 text-3xl font-black">
+                    {selectedMegaIds.length}/{maxCardsPerSide} cards loaded
+                  </h2>
+                </div>
               </div>
             </div>
             <div className="grid gap-4">
@@ -274,6 +495,10 @@ export default function Home() {
                   key={card.id}
                   card={card}
                   selected={selectedMegaIds.includes(card.id)}
+                  disabled={
+                    !selectedMegaIds.includes(card.id) &&
+                    selectedMegaIds.length >= maxCardsPerSide
+                  }
                   onToggle={(nextCard) =>
                     toggleCard(nextCard, selectedMegaIds, setSelectedMegaIds)
                   }
@@ -283,15 +508,17 @@ export default function Home() {
           </div>
 
           <div>
-            <div className="mb-5 flex items-center gap-3">
-              <Cpu className="text-fuchsia-200" />
-              <div>
-                <p className="text-xs font-bold uppercase tracking-[0.24em] text-fuchsia-200">
-                  Monad card selection
-                </p>
-                <h2 className="mt-1 text-3xl font-black">
-                  Tune the challenger
-                </h2>
+            <div className="mb-5 flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Cpu className="text-fuchsia-200" />
+                <div>
+                  <p className="text-xs font-bold uppercase tracking-[0.24em] text-fuchsia-200">
+                    Monad card selection
+                  </p>
+                  <h2 className="mt-1 text-3xl font-black">
+                    {selectedMonadIds.length}/{maxCardsPerSide} cards loaded
+                  </h2>
+                </div>
               </div>
             </div>
             <div className="grid gap-4">
@@ -300,6 +527,10 @@ export default function Home() {
                   key={card.id}
                   card={card}
                   selected={selectedMonadIds.includes(card.id)}
+                  disabled={
+                    !selectedMonadIds.includes(card.id) &&
+                    selectedMonadIds.length >= maxCardsPerSide
+                  }
                   onToggle={(nextCard) =>
                     toggleCard(nextCard, selectedMonadIds, setSelectedMonadIds)
                   }
@@ -317,18 +548,40 @@ export default function Home() {
               </p>
               <h2 className="mt-2 text-3xl font-black">Run the simulation</h2>
               <p className="mt-3 text-sm leading-6 text-slate-300">
-                The simulator combines baseline stats, selected feature cards,
-                arena weights, card downsides, and a small randomness band so
-                rematches can vary.
+                The engine generates a seed, applies the current loadout, then
+                reveals the battle log round by round.
               </p>
-              <button
-                type="button"
-                onClick={startBattle}
-                className="mt-6 flex h-14 w-full items-center justify-center gap-3 rounded-lg bg-lime-300 px-5 font-black uppercase tracking-[0.18em] text-black transition hover:bg-cyan-200"
-              >
-                <Swords size={20} />
-                Start battle
-              </button>
+              <div className="mt-6 grid gap-3 sm:grid-cols-2">
+                <button
+                  type="button"
+                  onClick={runBattle}
+                  className="flex h-14 items-center justify-center gap-3 rounded-lg bg-lime-300 px-5 font-black uppercase tracking-[0.18em] text-black transition hover:bg-cyan-200"
+                >
+                  <Swords size={20} />
+                  Start battle
+                </button>
+                <button
+                  type="button"
+                  onClick={resetLoadout}
+                  className="flex h-14 items-center justify-center gap-3 rounded-lg border border-white/15 bg-white/[0.04] px-5 font-black uppercase tracking-[0.18em] text-white transition hover:border-white/35 hover:bg-white/[0.08]"
+                >
+                  <RotateCcw size={19} />
+                  Reset loadout
+                </button>
+              </div>
+              {result ? (
+                <button
+                  type="button"
+                  onClick={runBattle}
+                  className="mt-3 flex h-12 w-full items-center justify-center gap-3 rounded-lg border border-fuchsia-300/40 bg-fuchsia-300/10 px-5 font-black uppercase tracking-[0.18em] text-fuchsia-50 transition hover:bg-fuchsia-300/18"
+                >
+                  <Activity size={18} />
+                  Run rematch
+                </button>
+              ) : null}
+              <p className="mt-4 font-mono text-xs leading-6 text-slate-500">
+                Seed: {battleSeed ?? "not generated yet"}
+              </p>
             </div>
 
             <div className="rounded-lg border border-white/10 bg-black/45 p-5">
@@ -337,32 +590,38 @@ export default function Home() {
                   <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-200">
                     Battle log
                   </p>
-                  <h2 className="mt-2 text-3xl font-black">Arena telemetry</h2>
+                  <h2 className="mt-2 text-3xl font-black">Round telemetry</h2>
                 </div>
                 <Activity className="text-cyan-200" size={28} />
               </div>
               <div className="mt-5 space-y-3 font-mono text-sm">
-                {(result?.log ?? [
-                  "Awaiting arena lock...",
-                  "Select cards for each chain.",
-                  "Press start battle to generate the matchup log.",
-                ]).map((entry, index) => (
-                  <div
+                {(visibleLog?.length
+                  ? visibleLog
+                  : [
+                      "Awaiting generated seed...",
+                      "Select up to four cards per side.",
+                      "Press start battle to reveal the combat log.",
+                    ]
+                ).map((entry, index) => (
+                  <motion.div
                     key={`${entry}-${index}`}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.25 }}
                     className="rounded-md border border-white/10 bg-white/[0.04] p-3 text-slate-200"
                   >
                     <span className="mr-3 text-lime-200">
                       {String(index + 1).padStart(2, "0")}
                     </span>
                     {entry}
-                  </div>
+                  </motion.div>
                 ))}
               </div>
             </div>
           </div>
         </section>
 
-        <section className="border-t border-white/10 bg-[radial-gradient(circle_at_top,rgba(34,211,238,0.16),transparent_34%),#080812] px-5 py-14 sm:px-8 lg:px-10">
+        <section className="border-t border-white/10 bg-[radial-gradient(circle_at_top,rgba(251,146,60,0.14),transparent_30%),radial-gradient(circle_at_70%_0%,rgba(168,85,247,0.18),transparent_32%),#080812] px-5 py-14 sm:px-8 lg:px-10">
           <div className="mx-auto max-w-7xl">
             <div className="flex items-center gap-3">
               <ShieldCheck className="text-lime-200" />
@@ -371,7 +630,7 @@ export default function Home() {
                   Result panel
                 </p>
                 <h2 className="mt-1 text-3xl font-black">
-                  Contextual verdict
+                  Final result and why
                 </h2>
               </div>
             </div>
@@ -387,12 +646,15 @@ export default function Home() {
                       {result.winner}
                     </div>
                     <div className="mt-5 grid grid-cols-2 gap-3">
-                      <div className="rounded-md bg-cyan-300/10 p-4">
-                        <p className="text-xs uppercase tracking-[0.18em] text-cyan-200">
+                      <div className="rounded-md bg-orange-300/10 p-4">
+                        <p className="text-xs uppercase tracking-[0.18em] text-orange-200">
                           MegaETH
                         </p>
                         <p className="mt-2 font-mono text-3xl font-black">
-                          {result.megaScore}
+                          {result.megaFighter.hp} HP
+                        </p>
+                        <p className="mt-1 font-mono text-sm text-slate-400">
+                          Score {result.megaScore}
                         </p>
                       </div>
                       <div className="rounded-md bg-fuchsia-300/10 p-4">
@@ -400,21 +662,29 @@ export default function Home() {
                           Monad
                         </p>
                         <p className="mt-2 font-mono text-3xl font-black">
-                          {result.monadScore}
+                          {result.monadFighter.hp} HP
+                        </p>
+                        <p className="mt-1 font-mono text-sm text-slate-400">
+                          Score {result.monadScore}
                         </p>
                       </div>
                     </div>
                   </div>
 
                   <div>
-                    <p className="text-lg leading-8 text-slate-200">
-                      {result.explanation}
-                    </p>
+                    <div className="rounded-lg border border-white/10 bg-black/30 p-5">
+                      <div className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200">
+                        <Gauge size={18} />
+                        Why this happened
+                      </div>
+                      <p className="text-lg leading-8 text-slate-200">
+                        {result.explanation}
+                      </p>
+                    </div>
                     <div className="mt-5 grid gap-4 md:grid-cols-2">
                       <div className="rounded-lg border border-white/10 bg-black/30 p-4">
-                        <div className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200">
-                          <Gauge size={18} />
-                          Key factors
+                        <div className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200">
+                          Top weighted stats
                         </div>
                         <ul className="space-y-2 text-sm text-slate-300">
                           {result.keyFactors.map((factor) => (
@@ -427,29 +697,18 @@ export default function Home() {
                           Tradeoffs exposed
                         </div>
                         <ul className="space-y-2 text-sm leading-6 text-slate-300">
-                          {(result.tradeoffs.length
-                            ? result.tradeoffs
-                            : [
-                                "No feature cards selected, so only baseline assumptions were compared.",
-                              ]
-                          ).map((tradeoff) => (
+                          {result.tradeoffs.map((tradeoff) => (
                             <li key={tradeoff}>- {tradeoff}</li>
                           ))}
                         </ul>
                       </div>
                     </div>
-                    <p className="mt-5 rounded-md border border-lime-300/20 bg-lime-300/10 p-4 text-sm leading-6 text-lime-50">
-                      Reminder: this matchup evaluates selected cards inside
-                      one arena. Different applications can reasonably prefer
-                      different chain designs, and this game is not financial
-                      advice.
-                    </p>
                   </div>
                 </div>
               ) : (
                 <p className="text-sm leading-6 text-slate-300">
-                  No result yet. Choose an arena, pick feature cards, and start
-                  the battle to generate an explanation.
+                  No result yet. Choose one arena, pick cards, and start the
+                  battle to generate a seeded explanation.
                 </p>
               )}
             </div>
