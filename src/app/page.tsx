@@ -6,6 +6,7 @@ import {
   Activity,
   ArrowRight,
   BookOpen,
+  Clipboard,
   Cpu,
   Gauge,
   RadioTower,
@@ -350,6 +351,100 @@ function resultInsights(result: BattleResult) {
   };
 }
 
+function loadoutLabel(cards: Card[]) {
+  return cards.length
+    ? cards.map((card) => card.name).join(" + ")
+    : "Baseline kit";
+}
+
+function battleSummary(result: BattleResult) {
+  if (result.winner === "Draw") {
+    return `Draw in ${result.arena.name} with MegaETH ${loadoutLabel(
+      result.megaFighter.cards,
+    )} vs Monad ${loadoutLabel(result.monadFighter.cards)}.`;
+  }
+
+  const winnerCards =
+    result.winner === "MegaETH"
+      ? result.megaFighter.cards
+      : result.monadFighter.cards;
+
+  return `${result.winner} won in ${result.arena.name} with ${loadoutLabel(
+    winnerCards,
+  )}.`;
+}
+
+function xPostSummary(result: BattleResult) {
+  return [
+    "FastEVM Fighters result",
+    `${result.winner} in ${result.arena.name}`,
+    `MegaETH loadout: ${loadoutLabel(result.megaFighter.cards)}`,
+    `Monad loadout: ${loadoutLabel(result.monadFighter.cards)}`,
+    `Main reason: ${result.keyFactors.join(" + ")}`,
+    "Contextual result, not global ranking.",
+  ].join("\n");
+}
+
+function ResultShareCard({ result }: { result: BattleResult }) {
+  return (
+    <div className="overflow-hidden rounded-lg border border-white/10 bg-[#090914] shadow-[0_0_70px_rgba(34,211,238,0.12)]">
+      <div className="bg-[radial-gradient(circle_at_15%_0%,rgba(251,146,60,0.28),transparent_35%),radial-gradient(circle_at_85%_0%,rgba(168,85,247,0.28),transparent_35%),linear-gradient(135deg,rgba(34,211,238,0.14),rgba(0,0,0,0.2))] p-5 sm:p-6">
+        <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-start">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.28em] text-cyan-100">
+              FastEVM Fighters
+            </p>
+            <h3 className="mt-3 text-3xl font-black text-white sm:text-4xl">
+              {result.winner} in this arena
+            </h3>
+          </div>
+          <div className="rounded-md border border-white/15 bg-black/35 px-3 py-2 text-right">
+            <p className="text-[0.65rem] font-bold uppercase tracking-[0.18em] text-slate-400">
+              Arena
+            </p>
+            <p className="mt-1 text-sm font-black text-white">
+              {result.arena.name}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-6 grid gap-3 md:grid-cols-2">
+          <div className="rounded-lg border border-orange-300/20 bg-orange-300/10 p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-orange-100">
+              MegaETH loadout
+            </p>
+            <p className="mt-2 text-lg font-black text-white">
+              {loadoutLabel(result.megaFighter.cards)}
+            </p>
+          </div>
+          <div className="rounded-lg border border-fuchsia-300/20 bg-fuchsia-300/10 p-4">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-fuchsia-100">
+              Monad loadout
+            </p>
+            <p className="mt-2 text-lg font-black text-white">
+              {loadoutLabel(result.monadFighter.cards)}
+            </p>
+          </div>
+        </div>
+
+        <div className="mt-4 rounded-lg border border-white/10 bg-black/40 p-4">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-lime-100">
+            Main reason
+          </p>
+          <p className="mt-2 text-base leading-7 text-slate-100">
+            {result.keyFactors.join(" + ")} mattered most under the selected
+            arena weights.
+          </p>
+        </div>
+
+        <p className="mt-4 rounded-md border border-white/10 bg-white/[0.06] p-3 text-sm font-bold text-slate-100">
+          Contextual result, not global ranking
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function ArchitectureFlow({
   title,
   chain,
@@ -421,6 +516,7 @@ export default function Home() {
   const [visibleLogCount, setVisibleLogCount] = useState(0);
   const [battleSeed, setBattleSeed] = useState<string | null>(null);
   const [learnMode, setLearnMode] = useState(false);
+  const [copiedType, setCopiedType] = useState<"summary" | "x" | null>(null);
   const selectedArena =
     arenas.find((arena) => arena.id === selectedArenaId) ?? arenas[0];
   const selectedMegaCards = useMemo(
@@ -481,6 +577,7 @@ export default function Home() {
   const runBattle = () => {
     const seed = createBattleSeed();
     setBattleSeed(seed);
+    setCopiedType(null);
     setResult(
       simulateBattle(selectedArena, selectedMegaCards, selectedMonadCards, seed),
     );
@@ -491,10 +588,23 @@ export default function Home() {
     setSelectedMonadIds([]);
     setResult(null);
     setBattleSeed(null);
+    setCopiedType(null);
+  };
+
+  const copyText = async (text: string, type: "summary" | "x") => {
+    if (!navigator.clipboard) {
+      return;
+    }
+
+    await navigator.clipboard.writeText(text);
+    setCopiedType(type);
+    window.setTimeout(() => setCopiedType(null), 1600);
   };
 
   const visibleLog = result?.log.slice(0, visibleLogCount);
   const insights = result ? resultInsights(result) : null;
+  const shareSummary = result ? battleSummary(result) : "";
+  const shareXPost = result ? xPostSummary(result) : "";
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#080812] text-white">
@@ -889,6 +999,39 @@ export default function Home() {
                         This is contextual, not a universal ranking.
                       </p>
                     </div>
+                  </div>
+                  <div className="grid gap-4 lg:col-span-2">
+                    <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                      <div className="flex flex-col justify-between gap-4 md:flex-row md:items-center">
+                        <div>
+                          <p className="text-xs font-bold uppercase tracking-[0.2em] text-cyan-200">
+                            Shareable result
+                          </p>
+                          <p className="mt-2 text-sm leading-6 text-slate-300">
+                            {shareSummary}
+                          </p>
+                        </div>
+                        <div className="grid gap-2 sm:grid-cols-2 md:min-w-[21rem]">
+                          <button
+                            type="button"
+                            onClick={() => copyText(shareSummary, "summary")}
+                            className="flex h-11 items-center justify-center gap-2 rounded-lg border border-cyan-300/35 bg-cyan-300/10 px-4 text-sm font-black uppercase tracking-[0.16em] text-cyan-50 transition hover:bg-cyan-300/18"
+                          >
+                            <Clipboard size={16} />
+                            {copiedType === "summary" ? "Copied" : "Copy"}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => copyText(shareXPost, "x")}
+                            className="flex h-11 items-center justify-center gap-2 rounded-lg border border-fuchsia-300/35 bg-fuchsia-300/10 px-4 text-sm font-black uppercase tracking-[0.16em] text-fuchsia-50 transition hover:bg-fuchsia-300/18"
+                          >
+                            <Clipboard size={16} />
+                            {copiedType === "x" ? "Copied" : "Copy X post"}
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                    <ResultShareCard result={result} />
                   </div>
                 </div>
               ) : (
