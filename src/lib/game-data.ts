@@ -18,6 +18,7 @@ export type Card = {
   name: string;
   subtitle: string;
   description: string;
+  educationalNote: string;
   effects: Stats;
   downsides: Partial<Stats>;
   tags: string[];
@@ -29,6 +30,7 @@ export type Arena = {
   id: string;
   name: string;
   description: string;
+  statRationale: string;
   weights: Stats;
   educationalNote: string;
 };
@@ -107,6 +109,8 @@ export const megaethCards: Card[] = [
     subtitle: "Realtime interaction loop",
     description:
       "Leans into MegaETH's roughly 10ms mini-block framing for apps that need fast UI feedback before normal EVM block cadence.",
+    educationalNote:
+      "Mini-blocks are a fast update layer: users can see very quick feedback while the chain still produces normal EVM blocks around a slower cadence.",
     effects: {
       speed: 4,
       throughput: 1,
@@ -131,6 +135,8 @@ export const megaethCards: Card[] = [
     subtitle: "Live app state updates",
     description:
       "Emphasizes real-time state streaming for responsive games, trading views, consumer apps, and high-frequency interfaces.",
+    educationalNote:
+      "State streaming means apps can subscribe to fresh chain state instead of waiting for slower polling loops, which can make interfaces feel live.",
     effects: {
       speed: 2,
       throughput: 1,
@@ -154,6 +160,8 @@ export const megaethCards: Card[] = [
     subtitle: "Specialized execution lane",
     description:
       "Uses the single high-performance sequencer assumption to optimize ordering and execution for latency-sensitive apps.",
+    educationalNote:
+      "A single optimized sequencer can reduce coordination overhead and improve speed, but it also concentrates sequencing power in one place.",
     effects: {
       speed: 4,
       throughput: 3,
@@ -178,6 +186,8 @@ export const megaethCards: Card[] = [
     subtitle: "L2 security anchor",
     description:
       "Highlights MegaETH's Ethereum settlement path and ETH gas alignment for builders who value Ethereum ecosystem continuity.",
+    educationalNote:
+      "Ethereum settlement means the L2 ultimately anchors important guarantees back to Ethereum, while ETH gas keeps the user model familiar.",
     effects: {
       speed: 0,
       throughput: 0,
@@ -201,6 +211,8 @@ export const megaethCards: Card[] = [
     subtitle: "Data availability scaling",
     description:
       "Represents EigenDA data availability as a scaling input for high-volume L2 usage while keeping DA assumptions explicit.",
+    educationalNote:
+      "Data availability systems help publish enough transaction data for verification, but they add assumptions developers should understand.",
     effects: {
       speed: 1,
       throughput: 3,
@@ -225,6 +237,8 @@ export const megaethCards: Card[] = [
     subtitle: "Distributed read access",
     description:
       "Models globally distributed RPC nodes as a UX and reliability boost for geographically diverse users.",
+    educationalNote:
+      "Distributed RPC nodes put read access closer to users, which can reduce app latency even when the underlying chain rules are unchanged.",
     effects: {
       speed: 1,
       throughput: 0,
@@ -246,6 +260,8 @@ export const megaethCards: Card[] = [
     subtitle: "ZK fraud proof framing",
     description:
       "Adds Kailua proof system / ZK fraud proof framing to represent stronger verification narratives for the L2 stack.",
+    educationalNote:
+      "Proof systems help verify that execution was handled correctly; stronger proof designs can improve trust, but may add technical complexity.",
     effects: {
       speed: 0,
       throughput: 0,
@@ -270,6 +286,8 @@ export const megaethCards: Card[] = [
     subtitle: "Consumer-friendly fee feel",
     description:
       "Represents stable-feeling fee UX as an app-layer advantage for mainstream users while preserving ETH gas as the core chain framing.",
+    educationalNote:
+      "Fee abstraction can make apps easier to use by hiding volatility or complexity, but it is an app-layer UX choice rather than the base gas asset.",
     effects: {
       speed: 0,
       throughput: 0,
@@ -296,6 +314,8 @@ export const monadCards: Card[] = [
     subtitle: "Optimistic multi-lane EVM",
     description:
       "Represents Monad's optimistic parallel execution model for workloads that can process independent transactions efficiently.",
+    educationalNote:
+      "Parallel execution lets independent transactions run at the same time. It helps most when apps avoid many transactions fighting over the same state.",
     effects: {
       speed: 2,
       throughput: 5,
@@ -320,6 +340,8 @@ export const monadCards: Card[] = [
     subtitle: "Purpose-built state database",
     description:
       "Models MonadDB as a state access and execution efficiency boost for performance-sensitive EVM applications.",
+    educationalNote:
+      "A purpose-built state database can speed up reads and writes, which matters because state access is often a bottleneck in high-throughput chains.",
     effects: {
       speed: 2,
       throughput: 4,
@@ -343,6 +365,8 @@ export const monadCards: Card[] = [
     subtitle: "Execution decoupling",
     description:
       "Uses asynchronous execution to improve pipeline efficiency while reminding players that app design still shapes outcomes.",
+    educationalNote:
+      "Asynchronous execution separates parts of the pipeline so the system can keep work moving instead of waiting for every step to finish serially.",
     effects: {
       speed: 2,
       throughput: 3,
@@ -366,6 +390,8 @@ export const monadCards: Card[] = [
     subtitle: "Consensus protection",
     description:
       "Highlights MonadBFT as the consensus layer for a high-performance L1 that still has to prove itself over time.",
+    educationalNote:
+      "Consensus decides ordering and agreement among validators. MonadBFT is part of Monad's approach to fast L1 coordination.",
     effects: {
       speed: 1,
       throughput: 1,
@@ -389,6 +415,8 @@ export const monadCards: Card[] = [
     subtitle: "Efficient message propagation",
     description:
       "Represents RaptorCast as a networking advantage for fast block propagation and validator communication.",
+    educationalNote:
+      "Fast broadcast helps validators receive messages quickly, which can support lower latency and smoother consensus under load.",
     effects: {
       speed: 2,
       throughput: 2,
@@ -410,6 +438,8 @@ export const monadCards: Card[] = [
     subtitle: "Native security path",
     description:
       "Leans into Monad's L1-native validator model and decentralization goals, while keeping bootstrapping risk visible.",
+    educationalNote:
+      "An L1 validator set provides native settlement and security assumptions, but new networks need time to mature their validator ecosystem.",
     effects: {
       speed: 0,
       throughput: 0,
@@ -434,6 +464,8 @@ export const monadCards: Card[] = [
     subtitle: "Familiar builder surface",
     description:
       "Boosts app portability through EVM/RPC compatibility for teams that want performance without abandoning EVM tooling.",
+    educationalNote:
+      "EVM/RPC compatibility means many Ethereum-style tools and contracts can transfer more easily, reducing migration friction for builders.",
     effects: {
       speed: 0,
       throughput: 1,
@@ -455,6 +487,8 @@ export const monadCards: Card[] = [
     subtitle: "400ms blocks, 800ms finality target",
     description:
       "Represents Monad's around 400ms block target and 800ms finality target for apps that need quick L1 confirmation.",
+    educationalNote:
+      "Fast blocks and fast finality can make L1 apps feel responsive, especially when users need confidence that an action has settled quickly.",
     effects: {
       speed: 4,
       throughput: 1,
@@ -479,6 +513,8 @@ export const arenas: Arena[] = [
     name: "Realtime Gaming Arena",
     description:
       "A twitchy game loop where feedback speed, UX, and reliable read access matter more than raw settlement purity.",
+    statRationale:
+      "Speed and UX are weighted heavily because games need quick feedback; reliability matters so players see consistent state during fast interactions.",
     weights: {
       speed: 1.7,
       throughput: 1,
@@ -496,6 +532,8 @@ export const arenas: Arena[] = [
     name: "Perps Arena",
     description:
       "A trading arena where fast updates, throughput, reliability, and liquidation-sensitive UX are under pressure.",
+    statRationale:
+      "Perps reward speed, throughput, UX, and reliability because stale state or slow updates can affect trading and liquidation workflows.",
     weights: {
       speed: 1.5,
       throughput: 1.4,
@@ -513,6 +551,8 @@ export const arenas: Arena[] = [
     name: "Consumer App Arena",
     description:
       "A mainstream UX test for apps that need fast confirmation feel, readable fees, and resilient access during spikes.",
+    statRationale:
+      "Consumer apps weight UX and reliability highly because mainstream users notice latency, failed reads, and confusing fee behavior quickly.",
     weights: {
       speed: 1.2,
       throughput: 1.2,
@@ -530,6 +570,8 @@ export const arenas: Arena[] = [
     name: "L1 Purist Arena",
     description:
       "A base-layer preference test that gives extra weight to L1-native validation and direct chain security assumptions.",
+    statRationale:
+      "Security and decentralization receive extra weight because this arena favors direct L1 validation and simpler settlement assumptions.",
     weights: {
       speed: 0.8,
       throughput: 1,
@@ -547,6 +589,8 @@ export const arenas: Arena[] = [
     name: "Decentralization Arena",
     description:
       "A governance and infrastructure arena where decentralization, security, and reliability outweigh raw speed.",
+    statRationale:
+      "Decentralization and security lead here because infrastructure assumptions, validator distribution, and proof paths matter more than speed alone.",
     weights: {
       speed: 0.6,
       throughput: 0.8,
@@ -564,6 +608,8 @@ export const arenas: Arena[] = [
     name: "DeFi Throughput Arena",
     description:
       "A high-volume DeFi arena where throughput, composability, security, and reliability carry the fight.",
+    statRationale:
+      "Throughput and composability matter because DeFi workloads often depend on many transactions interacting with shared liquidity and protocols.",
     weights: {
       speed: 1,
       throughput: 1.8,
@@ -581,6 +627,8 @@ export const arenas: Arena[] = [
     name: "Stress Test Arena",
     description:
       "A hostile load test where every stat matters, and cards with hidden complexity can create meaningful drawbacks.",
+    statRationale:
+      "Reliability leads because stress tests expose bottlenecks across RPC, execution, networking, data availability, and app design.",
     weights: {
       speed: 1.2,
       throughput: 1.4,

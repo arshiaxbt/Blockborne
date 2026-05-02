@@ -4,6 +4,8 @@ import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
   Activity,
+  ArrowRight,
+  BookOpen,
   Cpu,
   Gauge,
   RadioTower,
@@ -112,11 +114,13 @@ function CardButton({
   selected,
   disabled,
   onToggle,
+  learnMode,
 }: {
   card: Card;
   selected: boolean;
   disabled: boolean;
   onToggle: (card: Card) => void;
+  learnMode: boolean;
 }) {
   const theme = chainTheme[card.chain];
   const downsideCount = Object.values(card.downsides).filter(
@@ -124,11 +128,8 @@ function CardButton({
   ).length;
 
   return (
-    <button
-      type="button"
-      disabled={disabled}
-      onClick={() => onToggle(card)}
-      className={`group rounded-lg border p-4 text-left transition duration-200 ${
+    <div
+      className={`group rounded-lg border transition duration-200 ${
         selected
           ? `${theme.border} ${theme.soft} ${theme.glow}`
           : "border-white/10 bg-white/[0.04] hover:border-white/30 hover:bg-white/[0.07]"
@@ -138,32 +139,51 @@ function CardButton({
           : ""
       }`}
     >
-      <div className="flex items-center justify-between gap-3">
-        <span className={`text-xs font-bold uppercase tracking-[0.22em] ${theme.text}`}>
-          {card.subtitle}
-        </span>
-        <span
-          className={`h-2.5 w-2.5 rounded-full ${
-            selected ? "bg-white" : "bg-white/25 group-hover:bg-white/70"
-          }`}
-        />
-      </div>
-      <h3 className="mt-3 text-lg font-black text-white">{card.name}</h3>
-      <p className="mt-2 text-sm leading-6 text-slate-300">
-        {card.description}
-      </p>
-      <div className="mt-4 flex flex-wrap gap-2">
-        <span className="rounded bg-white/10 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
-          {card.rarity}
-        </span>
-        <span className="rounded bg-white/10 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
-          Max {card.maxCopies}
-        </span>
-        <span className="rounded bg-black/30 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
-          {downsideCount ? `${downsideCount} tradeoff` : "clean boost"}
-        </span>
-      </div>
-    </button>
+      <button
+        type="button"
+        disabled={disabled}
+        onClick={() => onToggle(card)}
+        className="w-full p-4 text-left disabled:cursor-not-allowed"
+      >
+        <div className="flex items-center justify-between gap-3">
+          <span
+            className={`text-xs font-bold uppercase tracking-[0.22em] ${theme.text}`}
+          >
+            {card.subtitle}
+          </span>
+          <span
+            className={`h-2.5 w-2.5 rounded-full ${
+              selected ? "bg-white" : "bg-white/25 group-hover:bg-white/70"
+            }`}
+          />
+        </div>
+        <h3 className="mt-3 text-lg font-black text-white">{card.name}</h3>
+        <p className="mt-2 text-sm leading-6 text-slate-300">
+          {card.description}
+        </p>
+        <div className="mt-4 flex flex-wrap gap-2">
+          <span className="rounded bg-white/10 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
+            {card.rarity}
+          </span>
+          <span className="rounded bg-white/10 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
+            Max {card.maxCopies}
+          </span>
+          <span className="rounded bg-black/30 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
+            {downsideCount ? `${downsideCount} tradeoff` : "clean boost"}
+          </span>
+        </div>
+      </button>
+      {learnMode ? (
+        <details className="mx-4 mb-4 rounded-md border border-white/10 bg-black/30 p-3">
+          <summary className="cursor-pointer text-xs font-bold uppercase tracking-[0.18em] text-slate-200">
+            Educational note
+          </summary>
+          <p className="mt-3 text-sm leading-6 text-slate-300">
+            {card.educationalNote}
+          </p>
+        </details>
+      ) : null}
+    </div>
   );
 }
 
@@ -244,6 +264,138 @@ function FighterPreview({
   );
 }
 
+function LearnModeToggle({
+  enabled,
+  onToggle,
+}: {
+  enabled: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onToggle}
+      className={`inline-flex items-center gap-3 rounded-lg border px-4 py-3 text-sm font-black uppercase tracking-[0.18em] transition ${
+        enabled
+          ? "border-lime-300 bg-lime-300/15 text-lime-50"
+          : "border-white/15 bg-white/[0.04] text-slate-300 hover:border-white/35"
+      }`}
+    >
+      <BookOpen size={18} />
+      Learn Mode {enabled ? "On" : "Off"}
+    </button>
+  );
+}
+
+function ArenaWeights({
+  arena,
+  learnMode,
+}: {
+  arena: (typeof arenas)[number];
+  learnMode: boolean;
+}) {
+  if (!learnMode) {
+    return null;
+  }
+
+  return (
+    <div className="mt-4 rounded-md border border-white/10 bg-black/30 p-3">
+      <p className="text-xs font-bold uppercase tracking-[0.18em] text-lime-100">
+        Why these stats matter
+      </p>
+      <p className="mt-2 text-sm leading-6 text-slate-300">
+        {arena.statRationale}
+      </p>
+      <div className="mt-3 grid grid-cols-2 gap-2">
+        {statKeys.map((key) => (
+          <div
+            key={`${arena.id}-${key}`}
+            className="rounded bg-white/[0.06] px-2 py-1 text-xs text-slate-300"
+          >
+            <span className="font-bold text-white">{statLabels[key]}</span>{" "}
+            {arena.weights[key].toFixed(1)}x
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function strongestStat(fighter: BattleFighter) {
+  return [...statKeys].sort(
+    (left, right) => fighter.finalStats[right] - fighter.finalStats[left],
+  )[0];
+}
+
+function resultInsights(result: BattleResult) {
+  const winner =
+    result.winner === "MegaETH"
+      ? result.megaFighter
+      : result.winner === "Monad"
+        ? result.monadFighter
+        : result.megaFighter.hp >= result.monadFighter.hp
+          ? result.megaFighter
+          : result.monadFighter;
+  const loser =
+    winner.chain === "MegaETH" ? result.monadFighter : result.megaFighter;
+  const loserStat = strongestStat(loser);
+
+  return {
+    winner,
+    loser,
+    loserStrength: `${loser.chain} stayed strongest in ${statLabels[
+      loserStat
+    ].toLowerCase()} with a ${loser.finalStats[loserStat]} stat value.`,
+    lesson: `${result.arena.name} shows that chain design is about matching architecture to application needs: the same speed, throughput, security, decentralization, composability, UX, and reliability tradeoffs can matter differently in another arena.`,
+  };
+}
+
+function ArchitectureFlow({
+  title,
+  chain,
+  steps,
+}: {
+  title: string;
+  chain: Chain;
+  steps: string[];
+}) {
+  const theme = chainTheme[chain];
+
+  return (
+    <div className={`rounded-lg border p-5 ${theme.panel}`}>
+      <p className={`text-xs font-bold uppercase tracking-[0.24em] ${theme.text}`}>
+        {title}
+      </p>
+      <div className="mt-5 flex flex-col gap-3 sm:hidden">
+        {steps.map((step, index) => (
+          <div key={`${chain}-${step}`}>
+            <div className="rounded-md border border-white/10 bg-black/35 px-4 py-3 text-sm font-bold text-white">
+              {step}
+            </div>
+            {index < steps.length - 1 ? (
+              <div className="flex justify-center py-2 text-slate-500 sm:hidden">
+                <ArrowRight className="rotate-90" size={18} />
+              </div>
+            ) : null}
+          </div>
+        ))}
+      </div>
+      <div className="mt-5 hidden items-center gap-2 overflow-x-auto pb-1 sm:flex">
+        {steps.map((step, index) => (
+          <div key={`${chain}-wide-${step}`} className="flex items-center gap-2">
+            <div className="whitespace-nowrap rounded-md border border-white/10 bg-black/35 px-3 py-2 text-sm font-bold text-white">
+              {step}
+            </div>
+            {index < steps.length - 1 ? (
+              <ArrowRight className="shrink-0 text-slate-500" size={18} />
+            ) : null}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function StatPill({ label, value }: { label: string; value: number }) {
   return (
     <div className="rounded-md border border-white/10 bg-black/30 px-3 py-2">
@@ -268,6 +420,7 @@ export default function Home() {
   const [result, setResult] = useState<BattleResult | null>(null);
   const [visibleLogCount, setVisibleLogCount] = useState(0);
   const [battleSeed, setBattleSeed] = useState<string | null>(null);
+  const [learnMode, setLearnMode] = useState(false);
   const selectedArena =
     arenas.find((arena) => arena.id === selectedArenaId) ?? arenas[0];
   const selectedMegaCards = useMemo(
@@ -341,6 +494,7 @@ export default function Home() {
   };
 
   const visibleLog = result?.log.slice(0, visibleLogCount);
+  const insights = result ? resultInsights(result) : null;
 
   return (
     <main className="min-h-screen overflow-hidden bg-[#080812] text-white">
@@ -373,6 +527,12 @@ export default function Home() {
                 />
                 <StatPill label="Rounds" value={8} />
                 <StatPill label="Wallets" value={0} />
+              </div>
+              <div className="mt-6">
+                <LearnModeToggle
+                  enabled={learnMode}
+                  onToggle={() => setLearnMode((value) => !value)}
+                />
               </div>
             </motion.div>
 
@@ -463,6 +623,7 @@ export default function Home() {
                   <p className="mt-2 text-sm leading-6 text-slate-300">
                     {arena.description}
                   </p>
+                  <ArenaWeights arena={arena} learnMode={learnMode} />
                 </button>
               ))}
             </div>
@@ -499,6 +660,7 @@ export default function Home() {
                     !selectedMegaIds.includes(card.id) &&
                     selectedMegaIds.length >= maxCardsPerSide
                   }
+                  learnMode={learnMode}
                   onToggle={(nextCard) =>
                     toggleCard(nextCard, selectedMegaIds, setSelectedMegaIds)
                   }
@@ -531,6 +693,7 @@ export default function Home() {
                     !selectedMonadIds.includes(card.id) &&
                     selectedMonadIds.length >= maxCardsPerSide
                   }
+                  learnMode={learnMode}
                   onToggle={(nextCard) =>
                     toggleCard(nextCard, selectedMonadIds, setSelectedMonadIds)
                   }
@@ -640,7 +803,7 @@ export default function Home() {
                 <div className="grid gap-6 lg:grid-cols-[0.8fr_1.2fr]">
                   <div className="rounded-lg border border-white/10 bg-black/40 p-5">
                     <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400">
-                      Winner
+                      Winner in this context
                     </p>
                     <div className="mt-3 text-5xl font-black text-white">
                       {result.winner}
@@ -672,36 +835,59 @@ export default function Home() {
                   </div>
 
                   <div>
-                    <div className="rounded-lg border border-white/10 bg-black/30 p-5">
-                      <div className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200">
-                        <Gauge size={18} />
-                        Why this happened
+                    <div className="grid gap-4">
+                      <div className="rounded-lg border border-white/10 bg-black/30 p-5">
+                        <div className="mb-3 flex items-center gap-2 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200">
+                          <Gauge size={18} />
+                          Why they won
+                        </div>
+                        <p className="text-base leading-7 text-slate-200">
+                          {result.explanation}
+                        </p>
                       </div>
-                      <p className="text-lg leading-8 text-slate-200">
-                        {result.explanation}
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                          <div className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-orange-200">
+                            What the loser was strong at
+                          </div>
+                          <p className="text-sm leading-6 text-slate-300">
+                            {insights?.loserStrength}
+                          </p>
+                        </div>
+                        <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                          <div className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-lime-200">
+                            What this teaches
+                          </div>
+                          <p className="text-sm leading-6 text-slate-300">
+                            {insights?.lesson}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="grid gap-4 md:grid-cols-2">
+                        <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                          <div className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200">
+                            Top weighted stats
+                          </div>
+                          <ul className="space-y-2 text-sm text-slate-300">
+                            {result.keyFactors.map((factor) => (
+                              <li key={factor}>- {factor}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div className="rounded-lg border border-white/10 bg-black/30 p-4">
+                          <div className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-200">
+                            Tradeoffs exposed
+                          </div>
+                          <ul className="space-y-2 text-sm leading-6 text-slate-300">
+                            {result.tradeoffs.map((tradeoff) => (
+                              <li key={tradeoff}>- {tradeoff}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      </div>
+                      <p className="rounded-md border border-lime-300/20 bg-lime-300/10 p-4 text-sm font-bold leading-6 text-lime-50">
+                        This is contextual, not a universal ranking.
                       </p>
-                    </div>
-                    <div className="mt-5 grid gap-4 md:grid-cols-2">
-                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
-                        <div className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-cyan-200">
-                          Top weighted stats
-                        </div>
-                        <ul className="space-y-2 text-sm text-slate-300">
-                          {result.keyFactors.map((factor) => (
-                            <li key={factor}>- {factor}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="rounded-lg border border-white/10 bg-black/30 p-4">
-                        <div className="mb-3 text-sm font-bold uppercase tracking-[0.18em] text-fuchsia-200">
-                          Tradeoffs exposed
-                        </div>
-                        <ul className="space-y-2 text-sm leading-6 text-slate-300">
-                          {result.tradeoffs.map((tradeoff) => (
-                            <li key={tradeoff}>- {tradeoff}</li>
-                          ))}
-                        </ul>
-                      </div>
                     </div>
                   </div>
                 </div>
@@ -711,6 +897,52 @@ export default function Home() {
                   battle to generate a seeded explanation.
                 </p>
               )}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-white/10 bg-black/45 px-5 py-14 sm:px-8 lg:px-10">
+          <div className="mx-auto max-w-7xl">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+              <div>
+                <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-200">
+                  Compare architecture
+                </p>
+                <h2 className="mt-2 text-3xl font-black">
+                  Two simplified execution flows
+                </h2>
+              </div>
+              <p className="max-w-xl text-sm leading-6 text-slate-400">
+                These are simplified teaching flows for the game model, not
+                complete protocol diagrams.
+              </p>
+            </div>
+            <div className="mt-6 grid gap-6 lg:grid-cols-2">
+              <ArchitectureFlow
+                title="MegaETH flow"
+                chain="MegaETH"
+                steps={[
+                  "User",
+                  "RPC",
+                  "Sequencer",
+                  "Mini-block",
+                  "State streaming",
+                  "EigenDA",
+                  "Ethereum",
+                ]}
+              />
+              <ArchitectureFlow
+                title="Monad flow"
+                chain="Monad"
+                steps={[
+                  "User",
+                  "RPC",
+                  "MonadBFT ordering",
+                  "Parallel execution",
+                  "MonadDB/state",
+                  "Finality",
+                ]}
+              />
             </div>
           </div>
         </section>
