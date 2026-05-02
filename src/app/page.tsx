@@ -12,355 +12,15 @@ import {
   Swords,
   Zap,
 } from "lucide-react";
-
-type Chain = "MegaETH" | "Monad";
-
-type Stats = {
-  throughput: number;
-  latency: number;
-  composability: number;
-  decentralization: number;
-  developerFit: number;
-};
-
-type Card = {
-  id: string;
-  chain: Chain;
-  name: string;
-  kicker: string;
-  description: string;
-  stats: Stats;
-  tradeoff: string;
-};
-
-type Arena = {
-  id: string;
-  name: string;
-  label: string;
-  description: string;
-  weights: Stats;
-  pressure: string;
-};
-
-type Fighter = {
-  chain: Chain;
-  tagline: string;
-  baseStats: Stats;
-  cards: Card[];
-};
-
-type BattleResult = {
-  winner: Chain | "Draw";
-  megaScore: number;
-  monadScore: number;
-  arena: Arena;
-  megaFighter: Fighter;
-  monadFighter: Fighter;
-  log: string[];
-  explanation: string;
-  keyFactors: string[];
-  tradeoffs: string[];
-};
-
-const emptyStats: Stats = {
-  throughput: 0,
-  latency: 0,
-  composability: 0,
-  decentralization: 0,
-  developerFit: 0,
-};
-
-const statLabels: Record<keyof Stats, string> = {
-  throughput: "Throughput",
-  latency: "Low latency",
-  composability: "Composability",
-  decentralization: "Decentralization",
-  developerFit: "Developer fit",
-};
-
-const arenas: Arena[] = [
-  {
-    id: "realtime-trading",
-    name: "Neon Trading Pit",
-    label: "Realtime execution",
-    description:
-      "A volatile arena where confirmation speed, predictable ordering, and fast feedback matter most.",
-    pressure:
-      "Fast-moving apps reward latency advantages, but still expose design tradeoffs around settlement and infrastructure assumptions.",
-    weights: {
-      throughput: 1.1,
-      latency: 1.6,
-      composability: 0.9,
-      decentralization: 0.7,
-      developerFit: 0.8,
-    },
-  },
-  {
-    id: "consumer-surge",
-    name: "Mass Mint Speedway",
-    label: "User surge",
-    description:
-      "A consumer app stress test where many users arrive at once and the app needs to stay responsive.",
-    pressure:
-      "Burst traffic rewards raw capacity and smooth developer operations without making one architecture universally preferable.",
-    weights: {
-      throughput: 1.5,
-      latency: 1,
-      composability: 0.8,
-      decentralization: 0.8,
-      developerFit: 1,
-    },
-  },
-  {
-    id: "defi-composability",
-    name: "Composable DeFi Grid",
-    label: "Protocol routing",
-    description:
-      "A protocol arena focused on liquidity routing, familiar tooling, and how easily apps can connect.",
-    pressure:
-      "Composability and developer fit carry more weight here, while performance still affects user experience.",
-    weights: {
-      throughput: 0.9,
-      latency: 0.8,
-      composability: 1.5,
-      decentralization: 1,
-      developerFit: 1.2,
-    },
-  },
-];
-
-const megaCards: Card[] = [
-  {
-    id: "mega-realtime",
-    chain: "MegaETH",
-    name: "Realtime Sequencer",
-    kicker: "Speed burst",
-    description:
-      "Pushes the fighter toward very fast feedback loops for apps that need near-instant interactions.",
-    stats: {
-      throughput: 2,
-      latency: 5,
-      composability: 1,
-      decentralization: -1,
-      developerFit: 1,
-    },
-    tradeoff:
-      "Realtime execution can depend heavily on specialized infrastructure and sequencing assumptions.",
-  },
-  {
-    id: "mega-eth-alignment",
-    chain: "MegaETH",
-    name: "Ethereum Alignment",
-    kicker: "L2 context",
-    description:
-      "Leans into Ethereum ecosystem familiarity while exploring high-performance L2 execution.",
-    stats: {
-      throughput: 1,
-      latency: 1,
-      composability: 3,
-      decentralization: 1,
-      developerFit: 2,
-    },
-    tradeoff:
-      "L2 design can introduce bridge, settlement, and dependency questions that vary by use case.",
-  },
-  {
-    id: "mega-specialized",
-    chain: "MegaETH",
-    name: "Specialized Execution",
-    kicker: "Focused design",
-    description:
-      "Optimizes around a narrower performance target instead of treating every workload the same.",
-    stats: {
-      throughput: 3,
-      latency: 2,
-      composability: 0,
-      decentralization: -1,
-      developerFit: 1,
-    },
-    tradeoff:
-      "Specialization can improve app feel while making infrastructure assumptions more important.",
-  },
-];
-
-const monadCards: Card[] = [
-  {
-    id: "monad-parallel",
-    chain: "Monad",
-    name: "Parallel Execution",
-    kicker: "Throughput burst",
-    description:
-      "Adds high-capacity execution for workloads where many transactions can be processed efficiently.",
-    stats: {
-      throughput: 5,
-      latency: 1,
-      composability: 1,
-      decentralization: 0,
-      developerFit: 1,
-    },
-    tradeoff:
-      "Parallel systems still need careful app design when transactions touch shared state.",
-  },
-  {
-    id: "monad-evm",
-    chain: "Monad",
-    name: "EVM Compatibility",
-    kicker: "Builder access",
-    description:
-      "Keeps the fighter close to familiar EVM workflows while competing as a high-performance L1.",
-    stats: {
-      throughput: 1,
-      latency: 0,
-      composability: 2,
-      decentralization: 1,
-      developerFit: 3,
-    },
-    tradeoff:
-      "Compatibility helps adoption, but app outcomes still depend on ecosystem maturity and deployment needs.",
-  },
-  {
-    id: "monad-pipeline",
-    chain: "Monad",
-    name: "Optimized Pipeline",
-    kicker: "System tuning",
-    description:
-      "Improves the execution pipeline across consensus and state handling for demanding onchain apps.",
-    stats: {
-      throughput: 3,
-      latency: 2,
-      composability: 0,
-      decentralization: 1,
-      developerFit: 0,
-    },
-    tradeoff:
-      "Deep system optimization may shift complexity toward validators, infrastructure, and tooling readiness.",
-  },
-];
-
-const baseFighters: Record<Chain, Omit<Fighter, "cards">> = {
-  MegaETH: {
-    chain: "MegaETH",
-    tagline: "Realtime Ethereum L2 challenger",
-    baseStats: {
-      throughput: 6,
-      latency: 8,
-      composability: 7,
-      decentralization: 5,
-      developerFit: 7,
-    },
-  },
-  Monad: {
-    chain: "Monad",
-    tagline: "High-performance EVM L1 challenger",
-    baseStats: {
-      throughput: 8,
-      latency: 6,
-      composability: 6,
-      decentralization: 7,
-      developerFit: 7,
-    },
-  },
-};
-
-const statKeys = Object.keys(emptyStats) as (keyof Stats)[];
-
-function addStats(base: Stats, cards: Card[]): Stats {
-  return cards.reduce(
-    (total, card) => {
-      statKeys.forEach((key) => {
-        total[key] += card.stats[key];
-      });
-      return total;
-    },
-    { ...base },
-  );
-}
-
-function scoreStats(stats: Stats, weights: Stats, randomShift: number) {
-  return Math.round(
-    statKeys.reduce((score, key) => score + stats[key] * weights[key], 0) +
-      randomShift,
-  );
-}
-
-function strongestWeightedStats(stats: Stats, weights: Stats) {
-  return [...statKeys]
-    .sort((a, b) => stats[b] * weights[b] - stats[a] * weights[a])
-    .slice(0, 2)
-    .map((key) => statLabels[key]);
-}
-
-function simulateBattle(
-  arena: Arena,
-  selectedMegaCards: Card[],
-  selectedMonadCards: Card[],
-): BattleResult {
-  const megaFighter: Fighter = {
-    ...baseFighters.MegaETH,
-    cards: selectedMegaCards,
-  };
-  const monadFighter: Fighter = {
-    ...baseFighters.Monad,
-    cards: selectedMonadCards,
-  };
-  const megaStats = addStats(megaFighter.baseStats, megaFighter.cards);
-  const monadStats = addStats(monadFighter.baseStats, monadFighter.cards);
-  const megaVariance = Math.random() * 6 - 3;
-  const monadVariance = Math.random() * 6 - 3;
-  const megaScore = scoreStats(megaStats, arena.weights, megaVariance);
-  const monadScore = scoreStats(monadStats, arena.weights, monadVariance);
-  const winner =
-    Math.abs(megaScore - monadScore) <= 2
-      ? "Draw"
-      : megaScore > monadScore
-        ? "MegaETH"
-        : "Monad";
-  const leadingStats =
-    winner === "MegaETH"
-      ? megaStats
-      : winner === "Monad"
-        ? monadStats
-        : undefined;
-  const keyFactors = leadingStats
-    ? strongestWeightedStats(leadingStats, arena.weights)
-    : ["Context fit", "Balanced tradeoffs"];
-  const explanation =
-    winner === "Draw"
-      ? `${arena.name} produced a close match. The selected cards created different strengths, but neither side separated enough to make a clear contextual winner.`
-      : `${winner} edged ahead in ${arena.name} because ${keyFactors
-          .map((factor) => factor.toLowerCase())
-          .join(" and ")} mattered heavily in this arena. This is an arena-specific outcome, not a universal ranking.`;
-
-  return {
-    winner,
-    megaScore,
-    monadScore,
-    arena,
-    megaFighter,
-    monadFighter,
-    log: [
-      `${arena.name} loaded: ${arena.pressure}`,
-      `MegaETH enters with ${selectedMegaCards.length || "no"} feature ${
-        selectedMegaCards.length === 1 ? "card" : "cards"
-      }: ${selectedMegaCards.map((card) => card.name).join(", ") || "baseline kit"}.`,
-      `Monad enters with ${selectedMonadCards.length || "no"} feature ${
-        selectedMonadCards.length === 1 ? "card" : "cards"
-      }: ${selectedMonadCards.map((card) => card.name).join(", ") || "baseline kit"}.`,
-      `Weighted score check: MegaETH ${megaScore} vs Monad ${monadScore}.`,
-      winner === "Draw"
-        ? "Result: draw. The arena exposed a close contextual matchup."
-        : `Result: ${winner} wins this arena by ${Math.abs(
-            megaScore - monadScore,
-          )} points.`,
-    ],
-    explanation,
-    keyFactors,
-    tradeoffs: [
-      ...megaFighter.cards.map((card) => `MegaETH: ${card.tradeoff}`),
-      ...monadFighter.cards.map((card) => `Monad: ${card.tradeoff}`),
-    ],
-  };
-}
+import {
+  arenas,
+  baseFighters,
+  megaethCards,
+  monadCards,
+  type Card,
+  type Chain,
+} from "@/lib/game-data";
+import { simulateBattle, type BattleResult } from "@/lib/battle-engine";
 
 function CardButton({
   card,
@@ -371,6 +31,10 @@ function CardButton({
   selected: boolean;
   onToggle: (card: Card) => void;
 }) {
+  const downsideCount = Object.values(card.downsides).filter(
+    (value) => (value ?? 0) < 0,
+  ).length;
+
   return (
     <button
       type="button"
@@ -383,7 +47,7 @@ function CardButton({
     >
       <div className="flex items-center justify-between gap-3">
         <span className="text-xs font-bold uppercase tracking-[0.22em] text-cyan-200">
-          {card.kicker}
+          {card.subtitle}
         </span>
         <span
           className={`h-2.5 w-2.5 rounded-full ${
@@ -395,6 +59,17 @@ function CardButton({
       <p className="mt-2 text-sm leading-6 text-slate-300">
         {card.description}
       </p>
+      <div className="mt-4 flex flex-wrap gap-2">
+        <span className="rounded bg-white/10 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
+          {card.rarity}
+        </span>
+        <span className="rounded bg-white/10 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-slate-200">
+          Max {card.maxCopies}
+        </span>
+        <span className="rounded bg-fuchsia-300/10 px-2 py-1 text-[0.65rem] font-bold uppercase tracking-[0.16em] text-fuchsia-100">
+          {downsideCount ? `${downsideCount} tradeoff` : "clean boost"}
+        </span>
+      </div>
     </button>
   );
 }
@@ -415,7 +90,7 @@ function StatPill({ label, value }: { label: string; value: number }) {
 export default function Home() {
   const [selectedArenaId, setSelectedArenaId] = useState(arenas[0].id);
   const [selectedMegaIds, setSelectedMegaIds] = useState<string[]>([
-    megaCards[0].id,
+    megaethCards[0].id,
   ]);
   const [selectedMonadIds, setSelectedMonadIds] = useState<string[]>([
     monadCards[0].id,
@@ -424,7 +99,7 @@ export default function Home() {
   const selectedArena =
     arenas.find((arena) => arena.id === selectedArenaId) ?? arenas[0];
   const selectedMegaCards = useMemo(
-    () => megaCards.filter((card) => selectedMegaIds.includes(card.id)),
+    () => megaethCards.filter((card) => selectedMegaIds.includes(card.id)),
     [selectedMegaIds],
   );
   const selectedMonadCards = useMemo(
@@ -471,12 +146,16 @@ export default function Home() {
               <p className="mt-6 max-w-2xl text-lg leading-8 text-slate-300">
                 Pick an arena, load feature cards for MegaETH and Monad, then
                 watch a contextual matchup explain which design choices mattered
-                in that scenario.
+                in that scenario. This is an educational game, not financial
+                advice.
               </p>
               <div className="mt-8 grid max-w-xl grid-cols-2 gap-3 sm:grid-cols-4">
                 <StatPill label="Mode" value={1} />
                 <StatPill label="Arenas" value={arenas.length} />
-                <StatPill label="Cards" value={megaCards.length + monadCards.length} />
+                <StatPill
+                  label="Cards"
+                  value={megaethCards.length + monadCards.length}
+                />
                 <StatPill label="Wallets" value={0} />
               </div>
             </motion.div>
@@ -509,6 +188,9 @@ export default function Home() {
                     >
                       {chain}
                     </p>
+                    <p className="mt-2 text-[0.7rem] font-bold uppercase tracking-[0.18em] text-slate-500">
+                      {baseFighters[chain].layer} / {baseFighters[chain].gasToken} gas
+                    </p>
                     <p className="mt-3 text-sm leading-6 text-slate-300">
                       {baseFighters[chain].tagline}
                     </p>
@@ -533,7 +215,9 @@ export default function Home() {
                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-200">
                   Arena selection
                 </p>
-                <h2 className="mt-2 text-3xl font-black">Choose the pressure test</h2>
+                <h2 className="mt-2 text-3xl font-black">
+                  Choose the pressure test
+                </h2>
               </div>
               <p className="max-w-xl text-sm leading-6 text-slate-400">
                 Each arena changes the stat weights, so the same cards can
@@ -557,7 +241,7 @@ export default function Home() {
                 >
                   <div className="flex items-center justify-between gap-4">
                     <span className="rounded bg-white/10 px-2 py-1 text-xs font-bold uppercase tracking-[0.18em] text-slate-200">
-                      {arena.label}
+                      Arena
                     </span>
                     <RadioTower className="text-lime-200" size={20} />
                   </div>
@@ -579,11 +263,13 @@ export default function Home() {
                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-cyan-200">
                   MegaETH card selection
                 </p>
-                <h2 className="mt-1 text-3xl font-black">Load up to two cards</h2>
+                <h2 className="mt-1 text-3xl font-black">
+                  Load up to two cards
+                </h2>
               </div>
             </div>
             <div className="grid gap-4">
-              {megaCards.map((card) => (
+              {megaethCards.map((card) => (
                 <CardButton
                   key={card.id}
                   card={card}
@@ -603,7 +289,9 @@ export default function Home() {
                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-fuchsia-200">
                   Monad card selection
                 </p>
-                <h2 className="mt-1 text-3xl font-black">Tune the challenger</h2>
+                <h2 className="mt-1 text-3xl font-black">
+                  Tune the challenger
+                </h2>
               </div>
             </div>
             <div className="grid gap-4">
@@ -630,7 +318,8 @@ export default function Home() {
               <h2 className="mt-2 text-3xl font-black">Run the simulation</h2>
               <p className="mt-3 text-sm leading-6 text-slate-300">
                 The simulator combines baseline stats, selected feature cards,
-                arena weights, and a small randomness band so rematches can vary.
+                arena weights, card downsides, and a small randomness band so
+                rematches can vary.
               </p>
               <button
                 type="button"
@@ -681,7 +370,9 @@ export default function Home() {
                 <p className="text-xs font-bold uppercase tracking-[0.24em] text-lime-200">
                   Result panel
                 </p>
-                <h2 className="mt-1 text-3xl font-black">Contextual verdict</h2>
+                <h2 className="mt-1 text-3xl font-black">
+                  Contextual verdict
+                </h2>
               </div>
             </div>
 
@@ -748,9 +439,10 @@ export default function Home() {
                       </div>
                     </div>
                     <p className="mt-5 rounded-md border border-lime-300/20 bg-lime-300/10 p-4 text-sm leading-6 text-lime-50">
-                      Reminder: this matchup evaluates the selected cards inside
+                      Reminder: this matchup evaluates selected cards inside
                       one arena. Different applications can reasonably prefer
-                      different chain designs.
+                      different chain designs, and this game is not financial
+                      advice.
                     </p>
                   </div>
                 </div>
