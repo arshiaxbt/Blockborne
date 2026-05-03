@@ -30,7 +30,7 @@ export function PrivyProviderInner({ children }: { children: ReactNode }) {
     <PrivyProvider
       appId={appId}
       config={{
-        loginMethods: ["email", "wallet"],
+        loginMethods: ["google", "twitter"],
         embeddedWallets: {
           ethereum: {
             createOnLogin: "users-without-wallets",
