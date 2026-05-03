@@ -89,8 +89,8 @@ function loadoutLabel(cards: Card[]) {
 
 function chainTone(chain: Chain) {
   return chain === "MegaETH"
-    ? "border-orange-300/30 bg-orange-300/10 text-orange-50"
-    : "border-fuchsia-300/30 bg-fuchsia-300/10 text-fuchsia-50";
+    ? "border-[#F5AF94]/35 bg-[#F5AF94]/10 text-[#ECE8E8]"
+    : "border-[#836EF9]/35 bg-[#836EF9]/10 text-[#FBFAF9]";
 }
 
 function buildPreview(chain: Chain, cards: Card[], arenaId: string) {
@@ -162,13 +162,13 @@ function WalletStatus() {
   return (
     <div className="flex flex-col gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-3 sm:flex-row sm:items-center sm:justify-between">
       <div>
-        <p className="text-xs font-black uppercase tracking-[0.2em] text-cyan-100">
+        <p className="text-xs font-black uppercase tracking-[0.2em] text-[#70BAD2]">
           Wallet ready
         </p>
         <p className="mt-1 text-sm text-slate-300">
           {embeddedWallet
             ? `Embedded wallet ${shortenAddress(embeddedWallet.address)}`
-            : "Create an in-app wallet for optional testnet records."}
+            : "Create an in-app wallet for testnet records."}
         </p>
       </div>
       <div className="flex gap-2">
@@ -177,7 +177,7 @@ function WalletStatus() {
             type="button"
             onClick={createEmbeddedWallet}
             disabled={creating}
-            className="rounded-lg border border-lime-300/30 bg-lime-300/10 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-lime-50 disabled:opacity-60"
+            className="rounded-lg border border-[#90D79F]/35 bg-[#90D79F]/10 px-3 py-2 text-xs font-black uppercase tracking-[0.14em] text-[#ECE8E8] disabled:opacity-60"
           >
             {creating ? "Creating..." : "Create in-app wallet"}
           </button>
@@ -210,8 +210,8 @@ function StatBars({ fighter }: { fighter: BattleFighter }) {
             <div
               className={`h-full rounded ${
                 fighter.chain === "MegaETH"
-                  ? "bg-gradient-to-r from-orange-400 to-cyan-300"
-                  : "bg-gradient-to-r from-fuchsia-400 to-violet-300"
+                  ? "bg-gradient-to-r from-[#F5AF94] via-[#90D79F] to-[#70BAD2]"
+                  : "bg-gradient-to-r from-[#836EF9] via-[#A0055D] to-[#FBFAF9]"
               }`}
               style={{
                 width: `${Math.min(100, Math.max(4, (fighter.finalStats[stat] / 150) * 100))}%`,
@@ -251,7 +251,7 @@ function FighterPanel({
       </div>
       <div className="mt-5 h-3 overflow-hidden rounded bg-black/45">
         <div
-          className="h-full rounded bg-lime-300"
+          className="h-full rounded bg-[#90D79F]"
           style={{ width: `${Math.max(0, Math.min(100, hp))}%` }}
         />
       </div>
@@ -287,9 +287,7 @@ function ArenaStep({
     <section className="grid gap-4">
       <div>
         <h2 className="text-3xl font-black text-white">Choose Arena</h2>
-        <p className="mt-2 text-slate-300">
-          Each arena weights architecture tradeoffs differently.
-        </p>
+        <p className="mt-2 text-slate-300">Pick the fight context.</p>
       </div>
       <div className="grid gap-3 md:grid-cols-2">
         {arenas.map((arena) => {
@@ -302,18 +300,20 @@ function ArenaStep({
               onClick={() => setSelectedArenaId(arena.id)}
               className={`rounded-2xl border p-5 text-left transition ${
                 selected
-                  ? "border-cyan-300/45 bg-cyan-300/12 shadow-[0_0_34px_rgba(34,211,238,0.12)]"
+                  ? "border-[#70BAD2]/45 bg-[#70BAD2]/12 shadow-[0_0_34px_rgba(112,186,210,0.12)]"
                   : "border-white/10 bg-white/[0.04] hover:border-white/25"
               }`}
             >
               <h3 className="text-xl font-black text-white">{arena.name}</h3>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                {arena.description}
-              </p>
               {learnMode ? (
-                <p className="mt-3 rounded-lg border border-white/10 bg-black/30 p-3 text-sm leading-6 text-slate-300">
-                  {arena.statRationale}
-                </p>
+                <details className="mt-3 rounded-lg border border-white/10 bg-black/30 p-3">
+                  <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.16em] text-slate-200">
+                    Learn
+                  </summary>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    {arena.statRationale}
+                  </p>
+                </details>
               ) : null}
             </button>
           );
@@ -322,7 +322,7 @@ function ArenaStep({
       <button
         type="button"
         onClick={() => setStep("Loadout")}
-        className="rounded-xl border border-cyan-300/40 bg-cyan-300/15 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-cyan-50 hover:bg-cyan-300/22"
+        className="rounded-xl border border-[#70BAD2]/40 bg-[#70BAD2]/15 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-[#ECE8E8] hover:bg-[#70BAD2]/22"
       >
         Continue to Loadout
       </button>
@@ -371,16 +371,21 @@ function CardGrid({
               <div className="flex items-center justify-between gap-3">
                 <h4 className="font-black text-white">{card.name}</h4>
                 <span
-                  className={`h-3 w-3 rounded-full ${selected ? "bg-lime-300" : "bg-white/20"}`}
+                  className={`h-3 w-3 rounded-full ${selected ? "bg-[#90D79F]" : "bg-white/20"}`}
                 />
               </div>
-              <p className="mt-2 text-sm leading-6 text-slate-300">
-                {card.description}
+              <p className="mt-2 text-xs font-bold uppercase tracking-[0.14em] text-slate-400">
+                {card.subtitle}
               </p>
               {learnMode ? (
-                <p className="mt-3 rounded-lg border border-white/10 bg-black/35 p-3 text-sm leading-6 text-slate-300">
-                  {card.educationalNote}
-                </p>
+                <details className="mt-3 rounded-lg border border-white/10 bg-black/35 p-3">
+                  <summary className="cursor-pointer text-xs font-black uppercase tracking-[0.16em] text-slate-200">
+                    Learn
+                  </summary>
+                  <p className="mt-2 text-sm leading-6 text-slate-300">
+                    {card.educationalNote}
+                  </p>
+                </details>
               ) : null}
             </button>
           );
@@ -438,10 +443,7 @@ function LoadoutStep({
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-3xl font-black text-white">Pick Cards</h2>
-          <p className="mt-2 text-slate-300">
-            Start with base stats only, or pick up to 4 cards per fighter for a
-            more interesting battle.
-          </p>
+          <p className="mt-2 text-slate-300">0/4 is allowed. 4/4 is chaos.</p>
         </div>
         <button
           type="button"
@@ -472,8 +474,20 @@ function LoadoutStep({
         />
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
-        <FighterPanel fighter={megaPreview} hp={100} arenaName="preview" />
-        <FighterPanel fighter={monadPreview} hp={100} arenaName="preview" />
+        <FighterPanel
+          fighter={megaPreview}
+          hp={100}
+          arenaName={
+            arenas.find((arena) => arena.id === selectedArenaId)?.name ?? "Arena"
+          }
+        />
+        <FighterPanel
+          fighter={monadPreview}
+          hp={100}
+          arenaName={
+            arenas.find((arena) => arena.id === selectedArenaId)?.name ?? "Arena"
+          }
+        />
       </div>
       <div className="grid gap-3 sm:grid-cols-2">
         <button
@@ -486,7 +500,7 @@ function LoadoutStep({
         <button
           type="button"
           onClick={startBattle}
-          className="rounded-xl border border-lime-300/40 bg-lime-300/15 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-lime-50 hover:bg-lime-300/22"
+          className="rounded-xl border border-[#90D79F]/40 bg-[#90D79F]/15 px-5 py-4 text-sm font-black uppercase tracking-[0.18em] text-[#ECE8E8] hover:bg-[#90D79F]/22"
         >
           Enter Battle
         </button>
@@ -517,9 +531,7 @@ function BattleStep({
       <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
         <div>
           <h2 className="text-3xl font-black text-white">Fight</h2>
-          <p className="mt-2 text-slate-300">
-            Step through the match or quick simulate the whole battle.
-          </p>
+          <p className="mt-2 text-slate-300">Step it or sim it.</p>
         </div>
         <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 font-mono text-sm font-black text-white">
           Round {Math.min(shownRounds + 1, result.rounds.length)} / {result.rounds.length}
@@ -532,8 +544,8 @@ function BattleStep({
           arenaName={result.arena.name}
         />
         <div className="flex justify-center">
-          <div className="rounded-full border border-cyan-300/30 bg-cyan-300/10 p-5">
-            <Swords className="text-cyan-100" size={30} />
+          <div className="rounded-full border border-[#70BAD2]/30 bg-[#70BAD2]/10 p-5">
+            <Swords className="text-[#70BAD2]" size={30} />
           </div>
         </div>
         <FighterPanel
@@ -545,7 +557,7 @@ function BattleStep({
       <div className="rounded-2xl border border-white/10 bg-white/[0.04] p-5">
         {lastAction ? (
           <>
-            <p className="text-xs font-black uppercase tracking-[0.22em] text-cyan-100">
+            <p className="text-xs font-black uppercase tracking-[0.22em] text-[#70BAD2]">
               Current action
             </p>
             <h3 className="mt-2 text-2xl font-black text-white">
@@ -581,7 +593,7 @@ function BattleStep({
         <button
           type="button"
           onClick={quickSim}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-cyan-50"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#70BAD2]/35 bg-[#70BAD2]/10 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-[#ECE8E8]"
         >
           <Zap size={16} />
           Quick Simulate
@@ -596,7 +608,7 @@ function BattleStep({
 
             setShownRounds(shownRounds + 1);
           }}
-          className="rounded-xl border border-lime-300/40 bg-lime-300/15 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-lime-50"
+          className="rounded-xl border border-[#90D79F]/40 bg-[#90D79F]/15 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-[#ECE8E8]"
         >
           {battleDone ? "View Result" : "Next Action"}
         </button>
@@ -616,10 +628,12 @@ function ResultStep({
   result,
   reset,
   rematch,
+  backToBattle,
 }: {
   result: BattleResult;
   reset: () => void;
   rematch: () => void;
+  backToBattle: () => void;
 }) {
   const blocks = resultBlocks(result);
   const title =
@@ -640,8 +654,8 @@ function ResultStep({
 
   return (
     <section className="grid gap-5">
-      <div className="rounded-2xl border border-cyan-300/25 bg-[radial-gradient(circle_at_20%_0%,rgba(34,211,238,0.16),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(168,85,247,0.18),transparent_35%),rgba(255,255,255,0.04)] p-6">
-        <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-100">
+      <div className="rounded-2xl border border-[#70BAD2]/25 bg-[radial-gradient(circle_at_20%_0%,rgba(112,186,210,0.16),transparent_35%),radial-gradient(circle_at_80%_0%,rgba(131,110,249,0.18),transparent_35%),rgba(255,255,255,0.04)] p-6">
+        <p className="text-xs font-black uppercase tracking-[0.24em] text-[#70BAD2]">
           Result
         </p>
         <h2 className="mt-3 text-4xl font-black text-white">{title}</h2>
@@ -665,27 +679,27 @@ function ResultStep({
         ))}
       </div>
       <div className="grid gap-4 md:grid-cols-2">
-        <div className="rounded-2xl border border-orange-300/25 bg-orange-300/10 p-5">
+        <div className="rounded-2xl border border-[#F5AF94]/25 bg-[#F5AF94]/10 p-5">
           <h3 className="text-lg font-black text-white">MegaETH loadout</h3>
           <p className="mt-2 text-sm leading-6 text-slate-200">
             {loadoutLabel(result.megaFighter.cards)}
           </p>
         </div>
-        <div className="rounded-2xl border border-fuchsia-300/25 bg-fuchsia-300/10 p-5">
+        <div className="rounded-2xl border border-[#836EF9]/25 bg-[#836EF9]/10 p-5">
           <h3 className="text-lg font-black text-white">Monad loadout</h3>
           <p className="mt-2 text-sm leading-6 text-slate-200">
             {loadoutLabel(result.monadFighter.cards)}
           </p>
         </div>
       </div>
-      <p className="rounded-xl border border-lime-300/20 bg-lime-300/10 p-4 text-sm font-bold text-lime-50">
+      <p className="rounded-xl border border-[#90D79F]/20 bg-[#90D79F]/10 p-4 text-sm font-bold text-[#ECE8E8]">
         This is a contextual simulation, not a universal ranking.
       </p>
       <div className="flex flex-col gap-3 sm:flex-row">
         <button
           type="button"
           onClick={copy}
-          className="inline-flex items-center justify-center gap-2 rounded-xl border border-cyan-300/35 bg-cyan-300/10 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-cyan-50"
+          className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#70BAD2]/35 bg-[#70BAD2]/10 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-[#ECE8E8]"
         >
           <Clipboard size={16} />
           Copy Result
@@ -693,9 +707,16 @@ function ResultStep({
         <button
           type="button"
           onClick={rematch}
-          className="rounded-xl border border-lime-300/35 bg-lime-300/10 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-lime-50"
+          className="rounded-xl border border-[#90D79F]/35 bg-[#90D79F]/10 px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-[#ECE8E8]"
         >
           Run Rematch
+        </button>
+        <button
+          type="button"
+          onClick={backToBattle}
+          className="rounded-xl border border-white/10 bg-white/[0.04] px-5 py-4 text-sm font-black uppercase tracking-[0.16em] text-slate-200"
+        >
+          Back to Battle
         </button>
         <button
           type="button"
@@ -771,17 +792,17 @@ export default function Home() {
 
   return (
     <LandingGate>
-      <main className="min-h-screen bg-[#050508] text-white">
-        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(251,146,60,0.15),transparent_30%),radial-gradient(circle_at_82%_0%,rgba(168,85,247,0.18),transparent_32%),linear-gradient(180deg,#050508,#080812_45%,#050508)]" />
+      <main className="min-h-screen bg-[#0E100F] text-white">
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_18%_0%,rgba(245,175,148,0.14),transparent_30%),radial-gradient(circle_at_82%_0%,rgba(131,110,249,0.17),transparent_32%),linear-gradient(180deg,#0E100F,#19191A_45%,#0E100F)]" />
         <div className="relative mx-auto grid max-w-7xl gap-6 px-4 py-5 sm:px-6 lg:px-8">
           <header className="grid gap-4">
             <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
               <div>
-                <p className="text-xs font-black uppercase tracking-[0.3em] text-cyan-100">
+                <p className="text-xs font-black uppercase tracking-[0.3em] text-[#70BAD2]">
                   Blockborne
                 </p>
                 <h1 className="mt-2 text-4xl font-black text-white sm:text-5xl">
-                  Pick an arena. Build a loadout. Fight.
+                  Arena. Loadout. Fight.
                 </h1>
               </div>
               <button
@@ -789,7 +810,7 @@ export default function Home() {
                 onClick={() => setLearnMode((current) => !current)}
                 className={`inline-flex items-center justify-center gap-2 rounded-xl border px-4 py-3 text-xs font-black uppercase tracking-[0.16em] ${
                   learnMode
-                    ? "border-lime-300/35 bg-lime-300/10 text-lime-50"
+                    ? "border-[#90D79F]/35 bg-[#90D79F]/10 text-[#ECE8E8]"
                     : "border-white/10 bg-white/[0.04] text-slate-200"
                 }`}
               >
@@ -832,7 +853,12 @@ export default function Home() {
               />
             ) : null}
             {step === "Result" && result ? (
-              <ResultStep result={result} reset={reset} rematch={rematch} />
+              <ResultStep
+                result={result}
+                reset={reset}
+                rematch={rematch}
+                backToBattle={() => setStep("Battle")}
+              />
             ) : null}
           </div>
         </div>

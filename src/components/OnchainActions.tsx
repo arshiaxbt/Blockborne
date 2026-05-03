@@ -130,12 +130,12 @@ function setChainRecord(
 function StatusBadge({ status }: { status: RecordStatus }) {
   const color =
     status === "success"
-      ? "border-lime-300/35 bg-lime-300/10 text-lime-50"
+      ? "border-[#90D79F]/35 bg-[#90D79F]/10 text-[#ECE8E8]"
       : status === "error"
         ? "border-red-300/35 bg-red-300/10 text-red-100"
         : status === "idle"
           ? "border-white/10 bg-white/[0.04] text-slate-300"
-          : "border-cyan-300/35 bg-cyan-300/10 text-cyan-50";
+          : "border-[#70BAD2]/35 bg-[#70BAD2]/10 text-[#ECE8E8]";
 
   return (
     <span
@@ -156,8 +156,8 @@ function ChainStatusCard({
   const chain = chainForKey(chainKey);
   const accent =
     chainKey === "monad"
-      ? "border-fuchsia-300/25 bg-fuchsia-300/10 text-fuchsia-100"
-      : "border-orange-300/25 bg-orange-300/10 text-orange-100";
+      ? "border-[#836EF9]/25 bg-[#836EF9]/10 text-[#FBFAF9]"
+      : "border-[#F5AF94]/25 bg-[#F5AF94]/10 text-[#ECE8E8]";
 
   return (
     <div className={`rounded-md border p-4 ${accent}`}>
@@ -177,7 +177,7 @@ function ChainStatusCard({
           href={getExplorerTxUrl(chain.id, record.hash)}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 block break-all rounded border border-lime-300/20 bg-lime-300/10 p-3 font-mono text-xs text-lime-50 transition hover:bg-lime-300/15"
+          className="mt-3 block break-all rounded border border-[#90D79F]/20 bg-[#90D79F]/10 p-3 font-mono text-xs text-[#ECE8E8] transition hover:bg-[#90D79F]/15"
         >
           {record.hash}
         </a>
@@ -328,7 +328,7 @@ export function OnchainActions({ result }: { result: BattleResult | null }) {
   const handleRecord = async (target: RecordTarget) => {
     if (target === "both") {
       const shouldContinue = window.confirm(
-        "Record both final results will ask you to approve two separate testnet transactions: one on MegaETH Testnet and one on Monad Testnet.",
+        "Record both asks for two wallet approvals: MegaETH, then Monad.",
       );
 
       if (!shouldContinue) {
@@ -356,56 +356,43 @@ export function OnchainActions({ result }: { result: BattleResult | null }) {
     <div className="mt-6 rounded-lg border border-white/10 bg-black/35 p-5">
       <div className="flex flex-col justify-between gap-4 lg:flex-row lg:items-start">
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.24em] text-lime-200">
-            Optional onchain recording
+          <p className="text-xs font-bold uppercase tracking-[0.24em] text-[#90D79F]">
+            Final records
           </p>
           <h3 className="mt-2 text-2xl font-black text-white">
-            Record final result on each fighter chain
+            Record result
           </h3>
-          <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-            MegaETH final records are sent to the MegaETH Testnet contract.
-            Monad final records are sent to the Monad Testnet contract. This
-            records this specific simulated battle, not a universal ranking.
-          </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[34rem]">
           <button
             type="button"
             onClick={() => handleRecord("monad")}
             disabled={isBusy}
-            className="rounded-lg border border-fuchsia-300/35 bg-fuchsia-300/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-fuchsia-50 transition hover:bg-fuchsia-300/18 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg border border-[#836EF9]/35 bg-[#836EF9]/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-[#FBFAF9] transition hover:bg-[#836EF9]/18 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {pendingTarget === "monad"
-              ? "Recording..."
-              : "Record Monad battle record on Monad"}
+            {pendingTarget === "monad" ? "Recording..." : "Record Monad"}
           </button>
           <button
             type="button"
             onClick={() => handleRecord("megaeth")}
             disabled={isBusy}
-            className="rounded-lg border border-orange-300/35 bg-orange-300/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-300/18 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg border border-[#F5AF94]/35 bg-[#F5AF94]/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-[#ECE8E8] transition hover:bg-[#F5AF94]/18 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {pendingTarget === "megaeth"
-              ? "Recording..."
-              : "Record MegaETH battle record on MegaETH"}
+            {pendingTarget === "megaeth" ? "Recording..." : "Record MegaETH"}
           </button>
           <button
             type="button"
             onClick={() => handleRecord("both")}
             disabled={isBusy}
-            className="rounded-lg border border-cyan-300/35 bg-cyan-300/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-cyan-50 transition hover:bg-cyan-300/18 disabled:cursor-not-allowed disabled:opacity-60"
+            className="rounded-lg border border-[#70BAD2]/35 bg-[#70BAD2]/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-[#ECE8E8] transition hover:bg-[#70BAD2]/18 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {pendingTarget === "both"
-              ? "Recording..."
-              : "Record both final results"}
+            {pendingTarget === "both" ? "Recording..." : "Record Both"}
           </button>
         </div>
       </div>
 
-      <p className="mt-4 rounded-md border border-cyan-300/20 bg-cyan-300/10 p-3 text-sm leading-6 text-cyan-50">
-        Record both will ask for two signatures: one MegaETH Testnet transaction
-        and one Monad Testnet transaction. Each row succeeds or fails
-        independently.
+      <p className="mt-4 rounded-md border border-[#70BAD2]/20 bg-[#70BAD2]/10 p-3 text-sm leading-6 text-[#ECE8E8]">
+        Two chains, two approvals. Each row is independent.
       </p>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2">
@@ -413,30 +400,12 @@ export function OnchainActions({ result }: { result: BattleResult | null }) {
         <ChainStatusCard chainKey="megaeth" record={chainRecords.megaeth} />
       </div>
 
-      <div className="mt-5 grid gap-3 md:grid-cols-2">
+      <div className="mt-5">
         <div className="rounded-md border border-white/10 bg-white/[0.04] p-4">
-          <p className="text-sm font-bold text-white">Testnet funds</p>
+          <p className="text-sm font-bold text-white">Gas</p>
           <p className="mt-2 text-sm leading-6 text-slate-300">
-            Get Monad testnet MON from the official Monad faucet. Get MegaETH
-            testnet ETH from the official MegaETH faucet. Testnet tokens have no
-            monetary value.
+            Use official faucets. Testnet tokens have no monetary value.
           </p>
-        </div>
-        <div className="rounded-md border border-white/10 bg-white/[0.04] p-4">
-          <p className="text-sm font-bold text-white">Environment status</p>
-          <ul className="mt-2 space-y-1 text-sm leading-6 text-slate-300">
-            <li>
-              Monad contract:{" "}
-              {process.env.NEXT_PUBLIC_MONAD_BATTLE_CONTRACT ? "set" : "missing"}
-            </li>
-            <li>
-              MegaETH contract:{" "}
-              {process.env.NEXT_PUBLIC_MEGAETH_BATTLE_CONTRACT
-                ? "set"
-                : "missing"}
-            </li>
-            <li>MegaETH RPC: {isMegaethRpcConfigured() ? "set" : "missing"}</li>
-          </ul>
         </div>
       </div>
     </div>

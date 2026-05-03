@@ -169,10 +169,10 @@ export function OnchainActionRecorder({ round }: { round: BattleRound }) {
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.18em] text-slate-400">
-            Optional action record
+            Action tx
           </p>
           <p className="mt-1 text-sm text-slate-300">
-            {round.attacker} action records only on {chain.name}.
+            {round.attacker} records on {chain.name}.
           </p>
         </div>
         <button
@@ -181,8 +181,8 @@ export function OnchainActionRecorder({ round }: { round: BattleRound }) {
           disabled={status === "switching" || status === "waiting-signature" || status === "pending"}
           className={`rounded-lg border px-4 py-3 text-xs font-black uppercase tracking-[0.14em] transition disabled:cursor-not-allowed disabled:opacity-60 ${
             isMegaETH
-              ? "border-orange-300/35 bg-orange-300/10 text-orange-50 hover:bg-orange-300/18"
-              : "border-fuchsia-300/35 bg-fuchsia-300/10 text-fuchsia-50 hover:bg-fuchsia-300/18"
+              ? "border-[#F5AF94]/35 bg-[#F5AF94]/10 text-[#ECE8E8] hover:bg-[#F5AF94]/18"
+              : "border-[#836EF9]/35 bg-[#836EF9]/10 text-[#FBFAF9] hover:bg-[#836EF9]/18"
           }`}
         >
           {status === "idle" || status === "error" ? label : statusLabel(status)}
@@ -193,7 +193,7 @@ export function OnchainActionRecorder({ round }: { round: BattleRound }) {
           href={getExplorerTxUrl(chain.id, hash)}
           target="_blank"
           rel="noreferrer"
-          className="mt-3 block break-all rounded border border-lime-300/20 bg-lime-300/10 p-3 font-mono text-xs text-lime-50"
+          className="mt-3 block break-all rounded border border-[#90D79F]/20 bg-[#90D79F]/10 p-3 font-mono text-xs text-[#ECE8E8]"
         >
           {hash}
         </a>
