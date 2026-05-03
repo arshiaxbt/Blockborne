@@ -18,6 +18,15 @@ export type BattleHashParams = {
   seed: string;
 };
 
+export type ActionHashParams = {
+  battleSessionId: Hex;
+  fighter: string;
+  actionName: string;
+  actionType: string;
+  round: number;
+  damage: number;
+};
+
 export function winnerToEnum(winner: string): number {
   if (winner === "MegaETH") {
     return 0;
@@ -58,6 +67,33 @@ export function createBattleHash(params: BattleHashParams): Hex {
         BigInt(params.megaethScore),
         BigInt(params.monadScore),
         seedHash,
+      ],
+    ),
+  );
+}
+
+export function createBattleSessionId(seed: string): Hex {
+  return keccak256(toBytes(`blockborne-session:${seed}`));
+}
+
+export function createActionHash(params: ActionHashParams): Hex {
+  return keccak256(
+    encodeAbiParameters(
+      [
+        { name: "battleSessionId", type: "bytes32" },
+        { name: "fighter", type: "string" },
+        { name: "actionName", type: "string" },
+        { name: "actionType", type: "string" },
+        { name: "round", type: "uint256" },
+        { name: "damage", type: "uint256" },
+      ],
+      [
+        params.battleSessionId,
+        params.fighter,
+        params.actionName,
+        params.actionType,
+        BigInt(params.round),
+        BigInt(params.damage),
       ],
     ),
   );

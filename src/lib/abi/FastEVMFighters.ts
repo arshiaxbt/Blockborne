@@ -27,4 +27,33 @@ export const fastEVMFightersAbi = [
       { name: "battleHash", type: "bytes32", indexed: false },
     ],
   },
+  {
+    type: "function",
+    name: "recordAction",
+    stateMutability: "nonpayable",
+    inputs: [
+      { name: "battleSessionId", type: "bytes32" },
+      { name: "fighter", type: "string" },
+      { name: "actionName", type: "string" },
+      { name: "actionType", type: "string" },
+      { name: "round", type: "uint256" },
+      { name: "damage", type: "uint256" },
+      { name: "actionHash", type: "bytes32" },
+    ],
+    outputs: [{ name: "actionId", type: "uint256" }],
+  },
+  {
+    type: "event",
+    name: "ActionRecorded",
+    inputs: [
+      { name: "battleSessionId", type: "bytes32", indexed: true },
+      { name: "player", type: "address", indexed: true },
+      { name: "fighter", type: "string", indexed: false },
+      { name: "actionName", type: "string", indexed: false },
+      { name: "actionType", type: "string", indexed: false },
+      { name: "round", type: "uint256", indexed: false },
+      { name: "damage", type: "uint256", indexed: false },
+      { name: "actionHash", type: "bytes32", indexed: false },
+    ],
+  },
 ] as const;

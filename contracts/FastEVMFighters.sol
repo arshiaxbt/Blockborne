@@ -21,10 +21,25 @@ contract FastEVMFighters {
         uint256 timestamp;
     }
 
+    struct ActionRecord {
+        bytes32 battleSessionId;
+        address player;
+        string fighter;
+        string actionName;
+        string actionType;
+        uint256 round;
+        uint256 damage;
+        bytes32 actionHash;
+        uint256 timestamp;
+    }
+
     uint256 public nextBattleId = 1;
+    uint256 public nextActionId = 1;
 
     mapping(uint256 => Battle) public battles;
+    mapping(uint256 => ActionRecord) public actions;
     mapping(address => uint256[]) private battlesByPlayer;
+    mapping(bytes32 => uint256[]) private actionIdsBySession;
 
     event BattleRecorded(
         uint256 indexed id,
@@ -34,6 +49,17 @@ contract FastEVMFighters {
         uint256 megaethScore,
         uint256 monadScore,
         bytes32 battleHash
+    );
+
+    event ActionRecorded(
+        bytes32 indexed battleSessionId,
+        address indexed player,
+        string fighter,
+        string actionName,
+        string actionType,
+        uint256 round,
+        uint256 damage,
+        bytes32 actionHash
     );
 
     function recordBattle(
@@ -80,5 +106,52 @@ contract FastEVMFighters {
 
     function getPlayerBattles(address player) external view returns (uint256[] memory) {
         return battlesByPlayer[player];
+    }
+
+    function recordAction(
+        bytes32 battleSessionId,
+        string calldata fighter,
+        string calldata actionName,
+        string calldata actionType,
+        uint256 round,
+        uint256 damage,
+        bytes32 actionHash
+    ) external returns (uint256 actionId) {
+        require(battleSessionId != bytes32(0), "Missing battle session");
+        require(bytes(fighter).length > 0, "Missing fighter");
+        require(bytes(actionName).length > 0, "Missing action");
+        require(round > 0, "Missing round");
+        require(actionHash != bytes32(0), "Missing action hash");
+
+        actionId = nextActionId++;
+
+        actions[actionId] = ActionRecord({
+            battleSessionId: battleSessionId,
+            player: msg.sender,
+            fighter: fighter,
+            actionName: actionName,
+            actionType: actionType,
+            round: round,
+            damage: damage,
+            actionHash: actionHash,
+            timestamp: block.timestamp
+        });
+
+        actionIdsBySession[battleSessionId].push(actionId);
+
+        emit ActionRecorded(
+            battleSessionId,
+            msg.sender,
+            fighter,
+            actionName,
+            actionType,
+            round,
+            damage,
+            actionHash
+        );
+    }
+
+    function getSessionActions(bytes32 battleSessionId) external view returns (uint256[] memory) {
+        return actionIdsBySession[battleSessionId];
     }
 }

@@ -6,6 +6,8 @@ import {
   type FighterProfile,
   type Stats,
 } from "./game-data";
+import { createActionHash, createBattleSessionId } from "./onchain";
+import type { Hex } from "viem";
 
 export type BattleFighter = FighterProfile & {
   hp: number;
@@ -15,9 +17,13 @@ export type BattleFighter = FighterProfile & {
 };
 
 export type BattleRound = {
+  battleSessionId: Hex;
   round: number;
   attacker: Chain;
   defender: Chain;
+  actionName: string;
+  actionType: string;
+  actionHash: Hex;
   damage: number;
   attackerHp: number;
   defenderHp: number;
@@ -26,6 +32,7 @@ export type BattleRound = {
 
 export type BattleResult = {
   seed: string;
+  battleSessionId: Hex;
   winner: Chain | "Draw";
   megaScore: number;
   monadScore: number;
@@ -174,6 +181,25 @@ function selectFlavorCard(
   return `${selected.name} triggers ${selected.subtitle.toLowerCase()}.`;
 }
 
+function actionNameFor(attacker: BattleFighter, arena: Arena, rng: RandomSource) {
+  if (!attacker.cards.length) {
+    return attacker.chain === "MegaETH"
+      ? "Baseline Latency Jab"
+      : "Baseline Throughput Guard";
+  }
+
+  const topCards = topContributingCards(attacker.cards, arena, 3);
+  const selected = topCards[Math.floor(rng() * topCards.length)]?.card;
+
+  return selected?.name ?? `${attacker.chain} Baseline Strike`;
+}
+
+function actionTypeFor(attacker: BattleFighter) {
+  return attacker.chain === "MegaETH"
+    ? "realtime-l2-action"
+    : "parallel-l1-action";
+}
+
 function selectAttacker(
   megaFighter: BattleFighter,
   monadFighter: BattleFighter,
@@ -274,6 +300,7 @@ export function simulateBattle(
   seed?: string | number,
 ): BattleResult {
   const battleSeed = String(seed ?? "fastevm-fighters-default-seed");
+  const battleSessionId = createBattleSessionId(battleSeed);
   const rng = createSeededRng(seed);
   const megaFighter = applyCardsToFighter(
     baseFighters.MegaETH,
@@ -297,14 +324,28 @@ export function simulateBattle(
     const defender =
       attackerChain === "MegaETH" ? monadFighter : megaFighter;
     const damage = calculateDamage(attacker, defender, arena, rng);
+    const actionName = actionNameFor(attacker, arena, rng);
+    const actionType = actionTypeFor(attacker);
+    const actionHash = createActionHash({
+      battleSessionId,
+      fighter: attacker.chain,
+      actionName,
+      actionType,
+      round,
+      damage,
+    });
     const flavor = selectFlavorCard(attacker, arena, rng);
 
     defender.hp = formatHp(defender.hp - damage);
 
     rounds.push({
+      battleSessionId,
       round,
       attacker: attacker.chain,
       defender: defender.chain,
+      actionName,
+      actionType,
+      actionHash,
       damage,
       attackerHp: formatHp(attacker.hp),
       defenderHp: formatHp(defender.hp),
@@ -337,6 +378,7 @@ export function simulateBattle(
 
   const partialResult: Omit<BattleResult, "explanation"> = {
     seed: battleSeed,
+    battleSessionId,
     winner,
     megaScore: megaFighter.arenaScore,
     monadScore: monadFighter.arenaScore,

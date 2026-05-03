@@ -87,6 +87,17 @@ The contract stores:
 
 The battle hash commits to the arena, loadouts, winner, scores, and seed hash. Recording a battle only proves that a user submitted that simulated result; it does not prove one chain is globally better.
 
+During step-by-step fights, users can also optionally record individual fighter
+actions:
+
+- MegaETH actions are submitted to the MegaETH Testnet contract.
+- Monad actions are submitted to the Monad Testnet contract.
+- Each action record includes a battle session ID, fighter, action name, action
+  type, round, damage, action hash, player, and timestamp.
+
+If the Solidity contract changes, redeploy to both testnets and update the
+public contract address environment variables in Vercel.
+
 ## Environment Safety
 
 Never commit `.env.local` or any file containing `DEPLOYER_PRIVATE_KEY`. Use `.env.example` as the template for required variables.

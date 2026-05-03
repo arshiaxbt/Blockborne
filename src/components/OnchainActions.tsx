@@ -68,7 +68,7 @@ const statusCopy: Record<RecordStatus, string> = {
   idle: "Idle",
   switching: "Switching network",
   "waiting-signature": "Waiting for signature",
-  "pending-tx": "Pending tx",
+  "pending-tx": "Pending",
   success: "Success",
   error: "Error",
 };
@@ -164,10 +164,10 @@ function ChainStatusCard({
       <div className="flex items-center justify-between gap-3">
         <div>
           <p className="text-xs font-black uppercase tracking-[0.2em]">
-            {chain.name}
+            {chainKey === "megaeth" ? "MegaETH side" : "Monad side"}
           </p>
           <p className="mt-1 text-xs text-slate-300">
-            Optional record of this one simulated result.
+            Final battle record on {chain.name}.
           </p>
         </div>
         <StatusBadge status={record.status} />
@@ -328,7 +328,7 @@ export function OnchainActions({ result }: { result: BattleResult | null }) {
   const handleRecord = async (target: RecordTarget) => {
     if (target === "both") {
       const shouldContinue = window.confirm(
-        "Record on Both will ask you to approve two separate testnet transactions: one on Monad Testnet and one on MegaETH Testnet.",
+        "Record both final results will ask you to approve two separate testnet transactions: one on MegaETH Testnet and one on Monad Testnet.",
       );
 
       if (!shouldContinue) {
@@ -344,11 +344,8 @@ export function OnchainActions({ result }: { result: BattleResult | null }) {
       } else if (target === "megaeth") {
         await safeRecordOnChain("megaeth");
       } else {
-        const monadRecorded = await safeRecordOnChain("monad");
-
-        if (monadRecorded) {
-          await safeRecordOnChain("megaeth");
-        }
+        await safeRecordOnChain("megaeth");
+        await safeRecordOnChain("monad");
       }
     } finally {
       setPendingTarget(null);
@@ -363,12 +360,12 @@ export function OnchainActions({ result }: { result: BattleResult | null }) {
             Optional onchain recording
           </p>
           <h3 className="mt-2 text-2xl font-black text-white">
-            Record this simulated result
+            Record final result on each fighter chain
           </h3>
           <p className="mt-3 max-w-2xl text-sm leading-6 text-slate-300">
-            This stores the result of this specific simulated battle. It does
-            not prove one chain is globally better. Privy uses an embedded app
-            wallet, so MetaMask is not required.
+            MegaETH final records are sent to the MegaETH Testnet contract.
+            Monad final records are sent to the Monad Testnet contract. This
+            records this specific simulated battle, not a universal ranking.
           </p>
         </div>
         <div className="grid gap-2 sm:grid-cols-3 lg:min-w-[34rem]">
@@ -378,7 +375,9 @@ export function OnchainActions({ result }: { result: BattleResult | null }) {
             disabled={isBusy}
             className="rounded-lg border border-fuchsia-300/35 bg-fuchsia-300/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-fuchsia-50 transition hover:bg-fuchsia-300/18 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {pendingTarget === "monad" ? "Recording..." : "Record on Monad"}
+            {pendingTarget === "monad"
+              ? "Recording..."
+              : "Record Monad battle record on Monad"}
           </button>
           <button
             type="button"
@@ -386,7 +385,9 @@ export function OnchainActions({ result }: { result: BattleResult | null }) {
             disabled={isBusy}
             className="rounded-lg border border-orange-300/35 bg-orange-300/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-orange-50 transition hover:bg-orange-300/18 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {pendingTarget === "megaeth" ? "Recording..." : "Record on MegaETH"}
+            {pendingTarget === "megaeth"
+              ? "Recording..."
+              : "Record MegaETH battle record on MegaETH"}
           </button>
           <button
             type="button"
@@ -394,14 +395,17 @@ export function OnchainActions({ result }: { result: BattleResult | null }) {
             disabled={isBusy}
             className="rounded-lg border border-cyan-300/35 bg-cyan-300/10 px-4 py-3 text-sm font-black uppercase tracking-[0.14em] text-cyan-50 transition hover:bg-cyan-300/18 disabled:cursor-not-allowed disabled:opacity-60"
           >
-            {pendingTarget === "both" ? "Recording..." : "Record on Both"}
+            {pendingTarget === "both"
+              ? "Recording..."
+              : "Record both final results"}
           </button>
         </div>
       </div>
 
       <p className="mt-4 rounded-md border border-cyan-300/20 bg-cyan-300/10 p-3 text-sm leading-6 text-cyan-50">
-        Record on Both will ask for two signatures: one transaction for Monad
-        Testnet and one transaction for MegaETH Testnet.
+        Record both will ask for two signatures: one MegaETH Testnet transaction
+        and one Monad Testnet transaction. Each row succeeds or fails
+        independently.
       </p>
 
       <div className="mt-5 grid gap-3 md:grid-cols-2">
