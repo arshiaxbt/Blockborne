@@ -4,7 +4,15 @@ import { defineConfig, globalIgnores } from "eslint/config";
 import tseslint from "typescript-eslint";
 
 const eslintConfig = defineConfig([
-  globalIgnores([".next/**", "out/**", "build/**", "next-env.d.ts"]),
+  globalIgnores([
+    ".next/**",
+    "out/**",
+    "build/**",
+    "artifacts/**",
+    "cache/**",
+    "typechain-types/**",
+    "next-env.d.ts",
+  ]),
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {

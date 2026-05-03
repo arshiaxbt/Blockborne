@@ -25,6 +25,7 @@ export type BattleRound = {
 };
 
 export type BattleResult = {
+  seed: string;
   winner: Chain | "Draw";
   megaScore: number;
   monadScore: number;
@@ -272,6 +273,7 @@ export function simulateBattle(
   selectedMonadCards: Card[],
   seed?: string | number,
 ): BattleResult {
+  const battleSeed = String(seed ?? "fastevm-fighters-default-seed");
   const rng = createSeededRng(seed);
   const megaFighter = applyCardsToFighter(
     baseFighters.MegaETH,
@@ -334,6 +336,7 @@ export function simulateBattle(
   );
 
   const partialResult: Omit<BattleResult, "explanation"> = {
+    seed: battleSeed,
     winner,
     megaScore: megaFighter.arenaScore,
     monadScore: monadFighter.arenaScore,

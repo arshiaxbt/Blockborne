@@ -1,5 +1,6 @@
 "use client";
 
+import dynamic from "next/dynamic";
 import { useEffect, useMemo, useState } from "react";
 import { motion } from "framer-motion";
 import {
@@ -32,6 +33,26 @@ import {
   type BattleFighter,
   type BattleResult,
 } from "@/lib/battle-engine";
+
+const OnchainActions = dynamic(
+  () =>
+    import("@/components/OnchainActions").then(
+      (module) => module.OnchainActions,
+    ),
+  {
+    ssr: false,
+  },
+);
+
+const PrivyLoginButton = dynamic(
+  () =>
+    import("@/components/PrivyLoginButton").then(
+      (module) => module.PrivyLoginButton,
+    ),
+  {
+    ssr: false,
+  },
+);
 
 const maxCardsPerSide = 4;
 
@@ -639,10 +660,13 @@ export default function Home() {
                 <StatPill label="Wallets" value={0} />
               </div>
               <div className="mt-6">
-                <LearnModeToggle
-                  enabled={learnMode}
-                  onToggle={() => setLearnMode((value) => !value)}
-                />
+                <div className="flex flex-col gap-3 sm:flex-row sm:items-start">
+                  <LearnModeToggle
+                    enabled={learnMode}
+                    onToggle={() => setLearnMode((value) => !value)}
+                  />
+                  <PrivyLoginButton />
+                </div>
               </div>
             </motion.div>
 
@@ -999,6 +1023,9 @@ export default function Home() {
                         This is contextual, not a universal ranking.
                       </p>
                     </div>
+                  </div>
+                  <div className="lg:col-span-2">
+                    <OnchainActions result={result} />
                   </div>
                   <div className="grid gap-4 lg:col-span-2">
                     <div className="rounded-lg border border-white/10 bg-black/30 p-4">
